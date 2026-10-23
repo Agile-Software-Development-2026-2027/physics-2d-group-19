@@ -206,24 +206,6 @@ with col4:
     filter_stubs = st.number_input("filter_stubs (frame minimi)", min_value=0,
                                    value=_cfg.get("post", {}).get("filter_stubs", 0), step=1)
 
-# memory (tp.link): None => auto (nFrames-1). Checkbox per auto + intero se manuale.
-_mem_cfg = _link.get("memory", None)
-col_mem1, col_mem2 = st.columns(2)
-with col_mem1:
-    memory_auto = st.checkbox(
-        "memory automatica (None → nFrames-1)",
-        value=(_mem_cfg is None),
-        help="Numero di frame per cui una particella può sparire e riapparire venendo ancora "
-             "collegata. Se automatica, viene usato nFrames-1 (massimo).",
-    )
-with col_mem2:
-    memory_value = st.number_input(
-        "memory (frame)", min_value=0,
-        value=int(_mem_cfg) if _mem_cfg is not None else 30,
-        step=1, disabled=memory_auto,
-    )
-memory = None if memory_auto else int(memory_value)
-
 # ---------------------------------------------------------------------------
 # 6. Salva config
 # ---------------------------------------------------------------------------
@@ -242,7 +224,7 @@ cfg_dict = {
         "search_range": search_range,
         "adaptive_stop": adaptive_stop,
         "adaptive_step": adaptive_step,
-        "memory": memory,
+        "memory": None,
     },
     "post": {
         "filter_stubs": filter_stubs,

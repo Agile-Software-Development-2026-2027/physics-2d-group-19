@@ -11,22 +11,9 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
+import streamlit as st
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
-import streamlit as st
-
-
-def _fig_to_png_bytes(fig, dpi: int = 250) -> bytes:
-    """Render a matplotlib figure to PNG bytes at the given DPI."""
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=dpi, bbox_inches="tight")
-    buf.seek(0)
-    return buf.getvalue()
-
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -39,6 +26,7 @@ def _show_plots(info: dict) -> None:
     from analyses.plot_omega_distribution import plot_omega_distribution
     from analyses.plot_density_vs_distance import plot_density_vs_distance
     from analyses.plot_tumbling import plot_tumbling_vs_gradient, plot_tumbling_duration_vs_distance
+    from analyses.plot_theta_y_distribution import plot_theta_y_distribution
 
     rd = info["flat_results_dir"]
     sp = info["settings_txt"]
@@ -52,7 +40,7 @@ def _show_plots(info: dict) -> None:
     machine = info.get("machine", "microscope2D")
 
     tab_names = [
-        "Theta",
+        "Theta", "Theta Y (legacy)", "Theta X (axis 0)", "Theta Y (axis 1)",
         "Flux", "N(t)", "Angle", "Omega",
         "Density vs dist", "Tumbling θ", "Tumbling duration",
     ]
@@ -63,6 +51,18 @@ def _show_plots(info: dict) -> None:
             results_dir=rd, settings_path=sp, exp_ids=eids,
             inner_circle=t_inner, thickness_circle=t_thick,
             max_distance=t_maxd, save_path=None)),
+        ("Theta Y (legacy)", lambda: plot_theta_y_distribution(
+            results_dir=rd, exp_ids=eids,
+            inner_circle=t_inner, thickness_circle=t_thick,
+            max_distance=t_maxd, pol_axis=None, save_path=None)),
+        ("Theta X (axis 0)", lambda: plot_theta_y_distribution(
+            results_dir=rd, exp_ids=eids,
+            inner_circle=t_inner, thickness_circle=t_thick,
+            max_distance=t_maxd, pol_axis=0, save_path=None)),
+        ("Theta Y (axis 1)", lambda: plot_theta_y_distribution(
+            results_dir=rd, exp_ids=eids,
+            inner_circle=t_inner, thickness_circle=t_thick,
+            max_distance=t_maxd, pol_axis=1, save_path=None)),
         ("Flux", lambda: plot_flux(
             results_dir=rd, settings_path=sp, exp_ids=eids, disc_radius=disc, save_path=None)),
         ("N(t)", lambda: plot_nt_stats(
@@ -84,139 +84,51 @@ def _show_plots(info: dict) -> None:
             try:
                 fig, _ = fn()
                 st.pyplot(fig)
-                png_bytes = _fig_to_png_bytes(fig, dpi=250)
-                st.download_button(
-                    label="⬇️ Scarica PNG (250 dpi)",
-                    data=png_bytes,
-                    file_name=f"{name.replace(' ', '_').replace('(', '').replace(')', '')}.png",
-                    mime="image/png",
-                    key=f"download_{name}",
-                )
             except Exception as e:
                 st.warning(f"Plot non disponibile: {e}")
 
-    # --- PhotonicsLab: per-experiment polar preview ---
+    # --- PhotonicsLab: polar preview ---
     if machine == "photonicsLab":
         st.subheader("📡 Polar diagrams — PhotonicsLab preview")
+        import numpy as np
+        import matplotlib.pyplot as plt
 
-        run_dir = info.get("run_dir")
+        pol_cols = st.columns(2)
+        for col, (pol_axis, label) in zip(
+            pol_cols,
+            [(0, "Horizontal pol (axis 0 — θₓ)"), (1, "Vertical pol (axis 1 — θᵧ)")],
+        ):
+            with col:
+                st.caption(label)
+                theta_all: list[np.ndarray] = []
+                for exp_id in eids:
+                    path = rd / f"ThetaY_axis{pol_axis}_exp{exp_id}.txt"
+                    if not path.exists():
+                        continue
+                    import pandas as pd
+                    data = np.genfromtxt(path, skip_header=1)
+                    if not (isinstance(data, float) and np.isnan(data)) and getattr(data, "size", 0) > 0:
+                        if data.ndim == 1:
+                            data = data.reshape(1, -1)
+                        theta_all.append(data[:, 0])
 
-        # --- helper ---
-        def _load_polar(csv_path: Path, col: int = 0, mirror: bool = False, wrap: bool = False) -> np.ndarray | None:
-            """Load a column from a CSV and return finite values.
-            wrap=True  → converts [-π,π] to [0,2π] (for arctan2 angle)
-            mirror=True → reflects [0,π] to full circle [0,2π] (for arccos theta)"""
-            if not csv_path.exists():
-                return None
-            try:
-                df = pd.read_csv(csv_path)
-                vals = df.iloc[:, col].dropna().to_numpy(dtype=float)
-                vals = vals[np.isfinite(vals)]
-                if vals.size == 0:
-                    return None
-                if wrap:
-                    vals = np.where(vals < 0, vals + 2 * np.pi, vals)
-                if mirror:
-                    vals = np.concatenate([vals, 2 * np.pi - vals])
-                return vals
-            except Exception:
-                return None
+                if theta_all:
+                    theta = np.concatenate(theta_all)
+                    theta = theta[np.isfinite(theta)]
+                    # mirror to full circle: theta in [0,pi] → reflect to [0,2pi]
+                    theta_full = np.concatenate([theta, 2 * np.pi - theta])
+                    bins = 36
+                    counts, bin_edges = np.histogram(theta_full, bins=bins, range=(0, 2 * np.pi), density=True)
+                    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-        def _polar_bar(ax, data: np.ndarray, bins: int = 36, color="steelblue"):
-            counts, edges = np.histogram(data, bins=bins, range=(0, 2 * np.pi), density=True)
-            centers = (edges[:-1] + edges[1:]) / 2
-            ax.bar(centers, counts, width=2 * np.pi / bins, alpha=0.6,
-                   align="center", color=color)
-            ax.set_theta_zero_location("N")
-            ax.set_theta_direction(-1)
-            ax.tick_params(labelsize=6)
-
-        metrics = [
-            ("angle",   "angle.csv",   False, True,  "steelblue",   r"angle — arctan2(Vy,Vx)"),
-        ]
-
-        n_exp = len(eids)
-
-        # --- preload all data once, used both for the grid and the combined figure ---
-        loaded = {}
-        for metric_key, fname, mirror, wrap, color, row_label in metrics:
-            loaded[metric_key] = {}
-            for exp_id in eids:
-                data = None
-                if run_dir is not None:
-                    csv_path = run_dir / f"exp_{exp_id:04d}" / fname
-                    data = _load_polar(csv_path, col=0, mirror=mirror, wrap=wrap)
-                loaded[metric_key][exp_id] = data
-
-        # --- combined single-image figure (all rows x all experiments) ---
-        n_rows = len(metrics)
-        fig_combined, axs_combined = plt.subplots(
-            n_rows, n_exp,
-            subplot_kw={"projection": "polar"},
-            figsize=(2.6 * n_exp, 2.6 * n_rows),
-            dpi=120,
-        )
-        if n_exp == 1:
-            axs_combined = axs_combined.reshape(n_rows, 1)
-        if n_rows == 1:
-            axs_combined = axs_combined.reshape(1, n_exp)
-
-        for row_idx, (metric_key, fname, mirror, wrap, color, row_label) in enumerate(metrics):
-            for col_idx, exp_id in enumerate(eids):
-                ax_c = axs_combined[row_idx, col_idx]
-                data = loaded[metric_key][exp_id]
-                if data is not None:
-                    _polar_bar(ax_c, data, color=color)
+                    fig_p, ax_p = plt.subplots(subplot_kw={"projection": "polar"}, figsize=(3, 3), dpi=150)
+                    ax_p.bar(bin_centers, counts, width=2 * np.pi / bins, alpha=0.6, align="center")
+                    ax_p.set_theta_zero_location("N")
+                    ax_p.set_theta_direction(-1)
+                    st.pyplot(fig_p)
+                    plt.close(fig_p)
                 else:
-                    ax_c.text(0.5, 0.5, "no data", transform=ax_c.transAxes,
-                              ha="center", va="center", fontsize=7)
-                if row_idx == 0:
-                    ax_c.set_title(f"exp {exp_id}", fontsize=9, pad=10)
-                if col_idx == 0:
-                    ax_c.text(-0.3, 0.5, row_label, transform=ax_c.transAxes,
-                               rotation=90, va="center", ha="center", fontsize=9)
-
-        fig_combined.suptitle("Polar diagrams — angle / θₓ / θᵧ", fontsize=12)
-        fig_combined.tight_layout()
-
-        combined_png = _fig_to_png_bytes(fig_combined, dpi=250)
-        st.download_button(
-            label="⬇️ Scarica griglia completa (PNG, 250 dpi)",
-            data=combined_png,
-            file_name="polar_diagrams_combined.png",
-            mime="image/png",
-            key="download_polar_combined",
-        )
-        plt.close(fig_combined)
-
-        st.divider()
-
-        for metric_key, fname, mirror, wrap, color, row_label in metrics:
-            st.caption(f"**{row_label}**")
-            cols = st.columns(n_exp)
-            for col_ui, exp_id in zip(cols, eids):
-                with col_ui:
-                    data = loaded[metric_key][exp_id]
-
-                    if data is not None:
-                        fig_p, ax_p = plt.subplots(
-                            subplot_kw={"projection": "polar"},
-                            figsize=(2.5, 2.5), dpi=120,
-                        )
-                        _polar_bar(ax_p, data, color=color)
-                        ax_p.set_title(f"exp {exp_id}", fontsize=8, pad=4)
-                        st.pyplot(fig_p)
-                        png_bytes = _fig_to_png_bytes(fig_p, dpi=250)
-                        st.download_button(
-                            label="⬇️ PNG",
-                            data=png_bytes,
-                            file_name=f"{metric_key}_exp{exp_id}.png",
-                            mime="image/png",
-                            key=f"download_{metric_key}_{exp_id}",
-                        )
-                        plt.close(fig_p)
-                    else:
-                        st.info(f"exp {exp_id}\nno data")
+                    st.info(f"Nessun dato ThetaY_axis{pol_axis} per gli esperimenti selezionati.")
 
 
 st.set_page_config(page_title="Clam Pipeline", page_icon="🔬", layout="centered")
@@ -410,4 +322,3 @@ if st.button("▶ Avvia analisi", type="primary"):
         plot_info["machine"]            = machine
         st.header("5. Risultati")
         _show_plots(plot_info)
-

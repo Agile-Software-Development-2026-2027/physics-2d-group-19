@@ -42,6 +42,9 @@ class FilterParams:
 @dataclass
 class AnalysisOutputs:
     theta: pd.DataFrame
+    theta_y: pd.DataFrame          # kept for backward-compat (axis=1, y-axis)
+    theta_y_axis0: pd.DataFrame    # angle w.r.t. x-axis (horizontal pol)
+    theta_y_axis1: pd.DataFrame    # angle w.r.t. y-axis (vertical pol)
     flux: pd.DataFrame
     angle: pd.DataFrame
     omega: pd.DataFrame
@@ -146,6 +149,7 @@ def analyze_experiment(
     if traj_df.empty:
         return AnalysisOutputs(
             theta=pd.DataFrame(columns=["theta", "dist"]),
+            theta_y=pd.DataFrame(columns=["theta_y", "dist"]),
             flux=pd.DataFrame(columns=["time", "flux"]),
             angle=pd.DataFrame(columns=["angle", "dist", "v"]),
             omega=pd.DataFrame(columns=["omega", "dist", "time"]),
@@ -213,6 +217,13 @@ def analyze_experiment(
     all_theta = []
     all_theta_dist = []
 
+    all_theta_y = []
+    all_theta_y_dist = []
+    all_theta_y_axis0 = []        # angle w.r.t. x-axis (Vx component)
+    all_theta_y_axis0_dist = []
+    all_theta_y_axis1 = []        # angle w.r.t. y-axis (Vy component) — image coords, y↓
+    all_theta_y_axis1_dist = []
+
     all_fluxes = []
     all_flux_times = []
 
@@ -263,6 +274,51 @@ def analyze_experiment(
             if np.any(mask_theta):
                 all_theta.append(theta[mask_theta])
                 all_theta_dist.append(dists_theta[mask_theta])
+        except Exception:
+            pass
+
+        try:
+            ps = params.particle_show
+            _inside = (
+                (p.ytraj >= 0) & (p.ytraj <= speckle.Ly) &
+                (p.xtraj >= 0) & (p.xtraj <= speckle.Lx)
+            )
+            _Xin = p.xtraj[_inside]
+            _Yin = p.ytraj[_inside]
+            _Sin = p.snaps[_inside]
+            if len(_Xin) > ps:
+                _dt = (_Sin[ps:] - _Sin[:-ps]) * params.dt
+                _ok = _dt > 0
+                _Vy = np.where(_ok, (_Yin[ps:] - _Yin[:-ps]) / np.where(_ok, _dt, 1), np.nan)
+                _Vx = np.where(_ok, (_Xin[ps:] - _Xin[:-ps]) / np.where(_ok, _dt, 1), np.nan)
+                _V = np.sqrt(_Vx**2 + _Vy**2)
+                _dist_y = cu.moving_average(p.dist[_inside], ps + 1)
+                _n = min(len(_V), len(_dist_y))
+                _V = _V[:_n]; _Vy = _Vy[:_n]; _dist_y = _dist_y[:_n]
+                _ty = np.full(_n, np.nan)
+                _tx = np.full(_n, np.nan)
+                _good = _V > 0
+                # theta_y: angle between velocity and +y image axis (y grows downward)
+                # arccos(Vy / |V|) — NO sign flip; caller must account for image orientation
+                _ty[_good] = np.arccos(np.clip(_Vy[_good] / _V[_good], -1.0, 1.0))
+                # theta_x: angle between velocity and +x image axis
+                _tx[_good] = np.arccos(np.clip(_Vx[_good] / _V[_good], -1.0, 1.0))
+                _m = np.isfinite(_ty) & np.isfinite(_dist_y)
+                if np.any(_m):
+                    all_theta_y.append(_ty[_m])
+                    all_theta_y_dist.append(_dist_y[_m])
+                # split by geometry axis so plots can pick the relevant component
+                pol_axis = speckle.axis  # 0 = horizontal (x), 1 = vertical (y)
+                if pol_axis == 0:
+                    _m0 = np.isfinite(_tx) & np.isfinite(_dist_y)
+                    if np.any(_m0):
+                        all_theta_y_axis0.append(_tx[_m0])
+                        all_theta_y_axis0_dist.append(_dist_y[_m0])
+                else:
+                    _m1 = np.isfinite(_ty) & np.isfinite(_dist_y)
+                    if np.any(_m1):
+                        all_theta_y_axis1.append(_ty[_m1])
+                        all_theta_y_axis1_dist.append(_dist_y[_m1])
         except Exception:
             pass
 
@@ -472,6 +528,30 @@ def analyze_experiment(
         if all_theta else pd.DataFrame(columns=["theta", "dist"])
     )
 
+    theta_y_df = (
+        pd.DataFrame({
+            "theta_y": np.concatenate(all_theta_y),
+            "dist": np.concatenate(all_theta_y_dist),
+        })
+        if all_theta_y else pd.DataFrame(columns=["theta_y", "dist"])
+    )
+
+    theta_y_axis0_df = (
+        pd.DataFrame({
+            "theta_y": np.concatenate(all_theta_y_axis0),
+            "dist": np.concatenate(all_theta_y_axis0_dist),
+        })
+        if all_theta_y_axis0 else pd.DataFrame(columns=["theta_y", "dist"])
+    )
+
+    theta_y_axis1_df = (
+        pd.DataFrame({
+            "theta_y": np.concatenate(all_theta_y_axis1),
+            "dist": np.concatenate(all_theta_y_axis1_dist),
+        })
+        if all_theta_y_axis1 else pd.DataFrame(columns=["theta_y", "dist"])
+    )
+
     angle_df = (
         pd.DataFrame({
             "angle": np.concatenate(all_angle),
@@ -511,6 +591,9 @@ def analyze_experiment(
 
     return AnalysisOutputs(
         theta=theta_df,
+        theta_y=theta_y_df,
+        theta_y_axis0=theta_y_axis0_df,
+        theta_y_axis1=theta_y_axis1_df,
         flux=flux_df,
         angle=angle_df,
         omega=omega_df,

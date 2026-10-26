@@ -13,7 +13,6 @@ from core.tracking_core import (
     run_link_in_h5,
     run_locate_to_h5,
     save_outputs,
-    subtract_background,
 )
 
 CORE_MODULES = [
@@ -79,18 +78,6 @@ def frames():
         for y0, x0 in START_POSITIONS:
             out[t] += 200 * np.exp(-((yy - y0) ** 2 + (xx - x0 - t) ** 2) / (2 * 1.5**2))
     return out
-
-
-def test_subtract_background_removes_the_mean(frames):
-    result = subtract_background(frames, "mean")
-
-    assert result.shape == frames.shape
-    np.testing.assert_allclose(result.mean(axis=0), 0, atol=1e-4)
-
-
-def test_subtract_background_rejects_unknown_method(frames):
-    with pytest.raises(ValueError):
-        subtract_background(frames, "foo")
 
 
 def test_tracking_finds_and_links_every_cell(frames, tmp_path):

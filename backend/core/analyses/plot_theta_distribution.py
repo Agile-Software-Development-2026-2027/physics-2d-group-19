@@ -6,8 +6,8 @@ from typing import Optional, Sequence
 import numpy as np
 import matplotlib.pyplot as plt
 
-from analyses.load_results import load_settings, load_theta_file
-from analyses.common import COLOR_GREEN, COLOR_ORANGE
+from core.analyses.load_results import load_settings, load_theta_file
+from core.analyses.common import COLOR_GREEN, COLOR_ORANGE
 
 
 def _load_theta_arrays_for_experiments(

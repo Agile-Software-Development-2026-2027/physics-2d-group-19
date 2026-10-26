@@ -10,7 +10,7 @@ import matplotlib.image as mpimg
 from scipy.interpolate import interp1d
 from scipy.spatial.distance import cdist
 
-import clamutils_exp as cu
+from core import clamutils_exp as cu
 
 
 @dataclass

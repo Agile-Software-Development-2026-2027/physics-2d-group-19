@@ -6,8 +6,8 @@ from typing import Optional, Sequence
 import numpy as np
 import matplotlib.pyplot as plt
 
-from analyses.load_results import load_theta_y_file
-from analyses.common import COLOR_GREEN, COLOR_ORANGE
+from core.analyses.load_results import load_theta_y_file
+from core.analyses.common import COLOR_GREEN, COLOR_ORANGE
 
 
 def plot_theta_y_distribution(

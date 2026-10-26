@@ -6,7 +6,7 @@ from typing import Optional, Sequence
 import numpy as np
 import matplotlib.pyplot as plt
 
-from analyses.common import bin_data, COLOR_PINK
+from core.analyses.common import bin_data, COLOR_PINK
 
 
 def _load_tumbling_orientation(results_dir: Path, exp_ids: Sequence[int], tumbling_threshold: float = 5.0):

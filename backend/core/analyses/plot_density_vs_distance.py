@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 from matplotlib import image
 from scipy.signal import savgol_filter
 
-import clamutils_exp as cu
+from core import clamutils_exp as cu
 
-from analyses.load_results import load_settings, load_omega_file
-from analyses.common import (
+from core.analyses.load_results import load_settings, load_omega_file
+from core.analyses.common import (
     COLOR_PINK,
     COLOR_GREEN,
     count_points_within_distance,

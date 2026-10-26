@@ -21,6 +21,8 @@ jobs:
     name: backend (lint + test)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      MPLBACKEND: Agg
     defaults:
       run:
         working-directory: backend

@@ -1,8 +1,13 @@
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.config import get_settings
 from app.main import create_app
+
+# The core calls plt.show(): draw in memory so tests never open a window.
+os.environ.setdefault("MPLBACKEND", "Agg")
 
 
 @pytest.fixture

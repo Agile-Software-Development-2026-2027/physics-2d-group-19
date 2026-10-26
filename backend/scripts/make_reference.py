@@ -20,19 +20,19 @@ FIXTURES_DIR = BACKEND_DIR / "tests" / "fixtures" / "exp49"
 
 sys.path.insert(0, str(LEGACY_ROOT))
 
-from clam_pipeline.cli import main as run_legacy_analysis  # noqa: E402
-from clam_pipeline.analyze import AnalysisParams, FilterParams  # noqa: E402
 from analyses.load_results import load_settings, load_tumbling_file  # noqa: E402
-from analyses.plot_theta_distribution import plot_theta_distribution  # noqa: E402
-from analyses.plot_flux import plot_flux  # noqa: E402
-from analyses.plot_density_vs_distance import plot_density_vs_distance  # noqa: E402
 from analyses.plot_angle_distribution import plot_angle_distribution  # noqa: E402
-from analyses.plot_omega_distribution import plot_omega_distribution  # noqa: E402
+from analyses.plot_density_vs_distance import plot_density_vs_distance  # noqa: E402
+from analyses.plot_flux import plot_flux  # noqa: E402
 from analyses.plot_nt_stats import plot_nt_stats  # noqa: E402
+from analyses.plot_omega_distribution import plot_omega_distribution  # noqa: E402
+from analyses.plot_theta_distribution import plot_theta_distribution  # noqa: E402
 from analyses.plot_tumbling import (  # noqa: E402
-    plot_tumbling_vs_gradient,
     plot_tumbling_duration_vs_distance,
+    plot_tumbling_vs_gradient,
 )
+from clam_pipeline.analyze import AnalysisParams, FilterParams  # noqa: E402
+from clam_pipeline.cli import main as run_legacy_analysis  # noqa: E402
 
 EXP_ID = 49
 
@@ -40,7 +40,8 @@ EXP_ID = 49
 # clam_pipeline.cli.main() usa, se non specificati, default diversi da quelli
 # del dataclass (radial_map=True di default, e FilterParams con
 # blinking_tolerance=0.1 / long_track_min_snaps=20 invece di 0.0 / 0).
-DISC_RADIUS = 350  # ricordato dalla demo live (inner_circle = disc_radius = 350), da riconfermare con l'operatrice
+DISC_RADIUS = 350  # ricordato dalla demo live (inner_circle = disc_radius = 350)
+# da riconfermare con l'operatrice
 # Intero (non float): clam_pipeline/cli.py salva i file flat con int(disc_radius)
 # nel nome (es. Flux_exp49_disc350.txt); le funzioni di plot cercano il file
 # costruendo il nome dal valore che gli passiamo, quindi deve combaciare esattamente.
@@ -75,7 +76,8 @@ FPARAMS = FilterParams(
 
 def run_analysis() -> dict:
     results_dir = FIXTURES_DIR / "reference" / "results"
-    radial_dir = FIXTURES_DIR / "_unused_radial_map"  # non deve esistere: con radial_map=False non viene mai controllata
+    # non deve esistere: con radial_map=False non viene mai controllata
+    radial_dir = FIXTURES_DIR / "_unused_radial_map"
 
     return run_legacy_analysis(
         code_dir=LEGACY_ROOT,
@@ -176,7 +178,8 @@ def compare_with_operator_tumbling(flat_results_dir: Path) -> None:
         print(f"  theta medio operatrice:  {reference['theta'].mean():.4f}")
         print(f"  duration medio generato:   {generated['duration'].mean():.4f}")
         print(f"  duration medio operatrice: {reference['duration'].mean():.4f}")
-    print("  (controllo indicativo: la conferma ufficiale arriva dalla mail all'operatrice, US-1 1.3/1.4)")
+    print("  (controllo indicativo: la conferma ufficiale arriva dalla mail all'operatrice,")
+    print("  US-1 1.3/1.4)")
 
 
 def main() -> None:

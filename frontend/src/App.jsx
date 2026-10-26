@@ -1,9 +1,21 @@
+import { useEffect, useState } from 'react'
+import { getHealth } from './api/client.js'
+
 function App() {
+  const [status, setStatus] = useState('checking...')
+
+  useEffect(() => {
+    getHealth()
+      .then((data) => setStatus(data.status))
+      .catch(() => setStatus('unreachable'))
+  }, [])
+
   return (
-      <div>
-        <h1>Hello World!</h1>
-      </div>
-  );
+    <main>
+      <h1>Moving Chlamydomonas</h1>
+      <p>Backend: {status}</p>
+    </main>
+  )
 }
 
-export default App;
+export default App

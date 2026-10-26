@@ -7,4 +7,9 @@ dist/
 *.mp4
 *.avi
 *.zip
-.env
+.env.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+pytest-report.xml
+backend/data/

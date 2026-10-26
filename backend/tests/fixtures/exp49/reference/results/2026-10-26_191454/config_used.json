@@ -1,0 +1,32 @@
+{
+  "code_dir": "C:\\Users\\simoc\\Desktop\\Uni\\physics-2d-group-19\\legacy-code",
+  "traj_dir": "C:\\Users\\simoc\\Desktop\\Uni\\physics-2d-group-19\\backend\\tests\\fixtures\\exp49",
+  "settings_txt": "C:\\Users\\simoc\\Desktop\\Uni\\physics-2d-group-19\\backend\\tests\\fixtures\\exp49\\talgae_settings.txt",
+  "illum_dir": "C:\\Users\\simoc\\Desktop\\Uni\\physics-2d-group-19\\backend\\tests\\fixtures\\exp49",
+  "radial_dir": "C:\\Users\\simoc\\Desktop\\Uni\\physics-2d-group-19\\backend\\tests\\fixtures\\exp49\\_unused_radial_map",
+  "exp_ids": [
+    49
+  ],
+  "params": {
+    "diam": 10,
+    "dt": 0.1,
+    "particle_show": 5,
+    "disc_radius": 350,
+    "flux_cg_in": 1,
+    "flux_cg_out": 150,
+    "tumbling_threshold": 5.0,
+    "radial_map": false,
+    "nskip": 1
+  },
+  "filters": {
+    "lifetime_min": 0,
+    "threshold_dist": 0,
+    "threshold_dist_tot": 0,
+    "dist_step": 1,
+    "strict": true,
+    "only_inside": true,
+    "blinking_ratio": 0,
+    "blinking_tolerance": 0,
+    "long_track_min_snaps": 0
+  }
+}

@@ -1,7 +1,6 @@
 # CI: runs on every pull request and on every push to main.
 # The job "test" is a required check on main: a pull request cannot be merged until it is green.
-# Do not rename it. It aggregates the other jobs: add every new job to its "needs" list.
-# Do not add a workflow-level "paths" filter: a skipped workflow leaves "test" pending forever.
+# Do not rename the job.
 name: CI
 
 on:

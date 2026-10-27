@@ -38,14 +38,20 @@ def assert_tables_close(
             f"expected {len(expected_aligned)} rows."
         )
 
-    # Deterministic row sorting
-    # If a sorting key is provided, sort both tables and reset the numeric index
+    # Sort both tables and reset the numeric index
     if sort_by is not None:
-        actual_aligned = actual_aligned.sort_values(by=sort_by).reset_index(drop=True)
-        expected_aligned = expected_aligned.sort_values(by=sort_by).reset_index(drop=True)
+        if isinstance(sort_by, str):
+            sort_keys = [sort_by]
+        else:
+            sort_keys = list(sort_by)
+        for c in expected_cols:
+            if c not in sort_keys:
+                sort_keys.append(c)
     else:
-        actual_aligned = actual_aligned.reset_index(drop=True)
-        expected_aligned = expected_aligned.reset_index(drop=True)
+        sort_keys = expected_cols
+
+    actual_aligned = actual_aligned.sort_values(by=sort_keys).reset_index(drop=True)
+    expected_aligned = expected_aligned.sort_values(by=sort_keys).reset_index(drop=True)
 
     # Column by column comparison
     for col in expected_cols:

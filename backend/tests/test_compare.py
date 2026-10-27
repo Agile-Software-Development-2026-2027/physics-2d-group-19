@@ -13,7 +13,7 @@ def test_identical_tables_pass():
     assert_tables_close(df1, df2)
 
 
-def test_values_within_tollerance_pass():
+def test_values_within_tolerance_pass():
     df1 = pd.DataFrame({"omega": [1.0000000000001]})
     df2 = pd.DataFrame({"omega": [1.0000000000000]})
     assert_tables_close(df1, df2, rtol=1e-9)
@@ -73,3 +73,9 @@ def test_sorting_handles_unaligned_rows():
     df1 = pd.DataFrame({"time": [2.0, 1.0], "flux": [20.0, 10.0]})
     df2 = pd.DataFrame({"time": [1.0, 2.0], "flux": [10.0, 20.0]})
     assert_tables_close(df1, df2, sort_by="time")
+
+
+def test_sorting_with_ties_breaks_deterministically():
+    df1 = pd.DataFrame({"dist": [1.0, 1.0], "theta": [0.1, 0.2]})
+    df2 = pd.DataFrame({"dist": [1.0, 1.0], "theta": [0.2, 0.1]})
+    assert_tables_close(df1, df2, sort_by="dist")

@@ -14,6 +14,7 @@ os.environ.setdefault("MPLBACKEND", "Agg")  # deve stare prima di ogni import ch
 
 import argparse
 import gzip
+import hashlib
 import sys
 import tempfile
 from pathlib import Path
@@ -27,7 +28,7 @@ REFERENCE_DIR = FIXTURES_DIR / "reference"
 
 sys.path.insert(0, str(LEGACY_ROOT))
 
-from analyses.load_results import load_settings, load_tumbling_file  # noqa: E402
+from analyses.load_results import load_settings  # noqa: E402
 from analyses.plot_angle_distribution import plot_angle_distribution  # noqa: E402
 from analyses.plot_density_vs_distance import plot_density_vs_distance  # noqa: E402
 from analyses.plot_flux import plot_flux  # noqa: E402
@@ -81,20 +82,26 @@ FPARAMS = FilterParams(
     long_track_min_snaps=0,
 )
 
-# Output flat legacy che finiscono nel riferimento. Restano fuori:
-# - i CSV della cartella results/<timestamp>/ (stessi dati in un altro formato)
-# - tumb_exp49_tthres5.0.txt, identico al file dell'operatrice gia' tra gli input
-REFERENCE_FILES = [
+# Output per cui esiste un file del laboratorio (Drive, R&D Physics 2D/2d/2d): il
+# test confronta il core direttamente con quelli, che stanno tra gli input in
+# FIXTURES_DIR. Qui servono solo per il controllo byte per byte di fine run.
+LAB_FILES = [
+    f"tumb_exp{EXP_ID}_tthres{TUMBLING_THRESHOLD:.1f}.txt",
+    f"tumb_dur_exp{EXP_ID}_tthres{TUMBLING_THRESHOLD:.1f}.txt",
+    f"Theta_exp{EXP_ID}_FluoRadialised.txt",
     f"angle_exp{EXP_ID}.txt",
     f"omega_exp{EXP_ID}.txt",
-    f"Theta_exp{EXP_ID}_FluoRadialised.txt",
-    f"ThetaY_exp{EXP_ID}.txt",
-    f"ThetaY_axis0_exp{EXP_ID}.txt",
-    f"ThetaY_axis1_exp{EXP_ID}.txt",
+]
+
+# Output senza file del laboratorio: finiscono in reference/. I CSV della cartella
+# results/<timestamp>/ restano fuori (stessi dati in un altro formato).
+REFERENCE_FILES = [
     f"Flux_exp{EXP_ID}_disc{DISC_RADIUS}.txt",
     f"N_dist_exp{EXP_ID}_disc{DISC_RADIUS}.txt",
     f"N_dist_compare_exp{EXP_ID}_disc{DISC_RADIUS}.txt",
-    f"tumb_dur_exp{EXP_ID}_tthres{TUMBLING_THRESHOLD:.1f}.txt",
+    f"ThetaY_exp{EXP_ID}.txt",
+    f"ThetaY_axis0_exp{EXP_ID}.txt",
+    f"ThetaY_axis1_exp{EXP_ID}.txt",
 ]
 
 
@@ -196,32 +203,20 @@ def make_plots(flat_results_dir: Path, settings_path: Path, plots_dir: Path) -> 
     print(f"[OK] Grafici salvati in: {plots_dir}")
 
 
-def compare_with_operator_tumbling(flat_results_dir: Path) -> None:
-    """Controllo veloce (non un test automatico) contro il file gia' fornito
-    dall'operatrice, per capire se i parametri scelti sono plausibili."""
-    generated_path = flat_results_dir / f"tumb_exp{EXP_ID}_tthres{TUMBLING_THRESHOLD:.1f}.txt"
-    reference_path = FIXTURES_DIR / "tumb_exp49_tthres5.0.txt"
-
-    if not generated_path.exists():
-        print(f"[WARN] Non trovato output generato: {generated_path}")
-        return
-    if not reference_path.exists():
-        print(f"[WARN] Non trovato file dell'operatrice: {reference_path}")
-        return
-
-    generated = load_tumbling_file(generated_path)
-    reference = load_tumbling_file(reference_path)
-
-    print("\n[CONFRONTO con tumb_exp49_tthres5.0.txt dell'operatrice]")
-    print(f"  righe generate:   {len(generated)}")
-    print(f"  righe operatrice: {len(reference)}")
-    if len(generated) > 0 and len(reference) > 0:
-        print(f"  theta medio generato:    {generated['theta'].mean():.4f}")
-        print(f"  theta medio operatrice:  {reference['theta'].mean():.4f}")
-        print(f"  duration medio generato:   {generated['duration'].mean():.4f}")
-        print(f"  duration medio operatrice: {reference['duration'].mean():.4f}")
-    print("  (controllo indicativo: la conferma ufficiale arriva dalla mail all'operatrice,")
-    print("  US-1 1.3/1.4)")
+def compare_with_lab_files(flat_results_dir: Path) -> None:
+    """Controllo (non un test automatico) che gli output generati coincidano
+    byte per byte, a meno del fine riga, con i file del laboratorio: se si',
+    i parametri usati sono quelli del laboratorio."""
+    print("\n[CONFRONTO con i file del laboratorio]")
+    for name in LAB_FILES:
+        lab_path = FIXTURES_DIR / name
+        if not lab_path.exists():
+            print(f"  [WARN] {name}: file del laboratorio non trovato in {FIXTURES_DIR}")
+            continue
+        generated = (flat_results_dir / name).read_bytes().replace(b"\r\n", b"\n")
+        lab = lab_path.read_bytes().replace(b"\r\n", b"\n")
+        esito = "identico" if generated == lab else "DIVERSO"
+        print(f"  {name}: {esito} (md5 {hashlib.md5(lab).hexdigest()})")
 
 
 def main() -> None:
@@ -241,7 +236,7 @@ def main() -> None:
         save_reference(flat_results_dir)
         if args.plots is not None:
             make_plots(flat_results_dir, result["settings_txt"], args.plots)
-        compare_with_operator_tumbling(flat_results_dir)
+        compare_with_lab_files(flat_results_dir)
 
 
 if __name__ == "__main__":

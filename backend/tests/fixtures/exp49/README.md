@@ -49,7 +49,7 @@ Valori ricostruiti riaprendo l'interfaccia Streamlit legacy (`app.py`) e richiam
 - `blinking_tolerance` = 0
 - `long_track_min_snaps` = 0
 
-**Nota sui filtri**: il documento di pianificazione riportava `threshold_dist` = 1, `threshold_dist_tot` = 3 e `blinking_ratio` = 0.5 (sono anche i default di `clam_pipeline.cli.main()` quando `fparams` non viene passato). Qui sono a 0 perché con questi valori il tumbling generato coincide esattamente con il file dell'operatrice (sezione 4): è un indizio forte che il laboratorio abbia lavorato con i filtri disattivati. Resta comunque da confermare via mail (sezione 5).
+**Nota sui filtri**: il documento di pianificazione riportava `threshold_dist` = 1, `threshold_dist_tot` = 3 e `blinking_ratio` = 0.5 (sono anche i default di `clam_pipeline.cli.main()` quando `fparams` non viene passato). Qui sono a 0 perché con questi valori cinque output generati coincidono byte per byte con i file del laboratorio (sezione 4): il laboratorio ha lavorato con i filtri disattivati.
 
 **Perché solo disc350**: `cli.py` mette `disc_radius` nel nome dei file di N(t) e del flusso (`N_dist_*`, `N_dist_compare_*`, `Flux_*`), quindi ogni valore produce file diversi. Il riferimento contiene solo `disc350`, cioè il valore usato. Nel primo commit della PR c'erano anche dei file `disc135`: erano avanzi di un run di prova precedente, nessun codice li produce con questi parametri, e sono stati rimossi.
 
@@ -59,39 +59,49 @@ Valori ricostruiti riaprendo l'interfaccia Streamlit legacy (`app.py`) e richiam
 
 Rigenerato il 2026-10-27 con queste versioni: i dati sono identici byte per byte a quelli della prima generazione (2026-10-26, versioni "latest"), quindi per questi calcoli la versione non ha avuto effetto.
 
-## 4. Contenuto di `reference/` e verifica
+## 4. Verifica contro gli output del laboratorio e contenuto di `reference/`
 
-Ogni file è l'output flat legacy compresso con gzip (`np.loadtxt` e `pd.read_csv` leggono direttamente i `.gz`). La prima riga è l'intestazione, i separatori sono spazi, il fine riga è LF.
+**Output confermati: identici byte per byte ai file del laboratorio.**
+
+La cartella Drive `R&D Physics 2D/2d/2d` contiene cinque output del laboratorio per l'esperimento 49. Gli output generati con i parametri della sezione 3 sono identici a tutti e cinque, con lo stesso md5 (fine riga LF):
+
+| File del laboratorio | md5 |
+|---|---|
+| `tumb_exp49_tthres5.0.txt` | `388672ffa4f01aa75594c93e85f0c1eb` |
+| `tumb_dur_exp49_tthres5.0.txt` | `a6230cc6d600d88e96cead3f69081082` |
+| `Theta_exp49_FluoRadialised.txt` | `0def3cdd835aa3d34e344afafd6823d9` |
+| `angle_exp49.txt` | `9c5255d86e461b0bbc1939952841c247` |
+| `omega_exp49.txt` | `7c57ff1fbc6e0c97f94d3fb62ed979f4` |
+
+Quindi i parametri sono confermati per tumbling, durata del tumbling, theta, angle e omega. Per queste cinque grandezze il test confronta il core direttamente con i file del laboratorio, che stanno tra gli input (sezione 2): sono loro la fonte, non una nostra copia. `make_reference.py` ripete il confronto byte per byte a ogni esecuzione.
+
+**Output non ancora confermati: `reference/`.**
+
+Per questi non esiste un file del laboratorio, quindi il riferimento è l'output del run legacy. Ogni file è compresso con gzip (`np.loadtxt` e `pd.read_csv` leggono direttamente i `.gz`); la prima riga è l'intestazione, i separatori sono spazi, il fine riga è LF.
 
 | File | Colonne | Righe dati |
 |---|---|---|
-| `angle_exp49.txt.gz` | `angle dists v` | 257.909 |
-| `omega_exp49.txt.gz` | `omega dists time` | 248.905 |
+| `Flux_exp49_disc350.txt.gz` | `time flux` | 10 |
+| `N_dist_exp49_disc350.txt.gz` | `N n_disc dists` | 1.500 |
+| `N_dist_compare_exp49_disc350.txt.gz` | `N_raw n_disc_raw dists_raw N n_disc dists` | 1.500 |
 | `ThetaY_exp49.txt.gz` | `theta_y dist` | 222.702 |
 | `ThetaY_axis0_exp49.txt.gz` | `theta_y dist` (asse 0) | 222.702 |
 | `ThetaY_axis1_exp49.txt.gz` | `theta_y dist` (asse 1) | 0: il legacy scrive solo l'intestazione |
-| `Theta_exp49_FluoRadialised.txt.gz` | `Theta dists` | 47.931 |
-| `tumb_dur_exp49_tthres5.0.txt.gz` | `dists duration time` | 13.900 |
-| `N_dist_exp49_disc350.txt.gz` | `N n_disc dists` | 1.500 |
-| `N_dist_compare_exp49_disc350.txt.gz` | `N_raw n_disc_raw dists_raw N n_disc dists` | 1.500 |
-| `Flux_exp49_disc350.txt.gz` | `time flux` | 10 |
 
-Non sono nel riferimento, perché duplicati o non confrontabili:
+Restano da confermare con l'operatrice (sezione 5):
+- `Flux_*` e `N_dist_*`: dipendono da `disc_radius` (350, ricordato dalla demo ma non verificato su un file del laboratorio)
+- `ThetaY_*`
+
+Non sono in `reference/`, perché duplicati o non confrontabili:
 - i CSV di `results/<timestamp>/`: stessi dati dei `.txt`, in un altro formato
-- il `tumb_exp49_tthres5.0.txt` generato: identico al file dell'operatrice già presente tra gli input (`../tumb_exp49_tthres5.0.txt`), il test può confrontarsi direttamente con quello
 - i grafici PDF: binari, non confrontabili in un test; si rigenerano con `--plots` (sezione 6)
 
-**Verifica: confronto riga per riga col file dell'operatrice. Match esatto, confermato automaticamente — non solo una stima.**
-
-Confronto tra il `tumb_exp49_tthres5.0.txt` generato dallo script e `tumb_exp49_tthres5.0.txt` (fornito dall'operatrice, output originale del laboratorio):
-
-- Righe: 27.787 generate = 27.787 dell'operatrice (conteggio identico)
-- Confronto numerico elemento per elemento su tutte e 4 le colonne (`theta`, `dists`, `duration`, `time`): **0 righe con qualunque differenza, anche minima** (`np.array_equal` = True)
-- Con i fine riga entrambi LF i due file sono identici anche byte per byte.
-
-**Conclusione**: i parametri della sezione 3 sono quelli realmente usati dal laboratorio per produrre questo output. Non è ancora una conferma *esplicita* dell'operatrice (serve comunque la mail, sotto-task 1.3, anche per gli altri output non ancora verificati: theta, omega, angle, flux, N(t)) — ma è una conferma solida, verificata a livello di dato, non di stima.
-
 ## 5. Conferma dell'operatrice (via mail, US-1 1.3/1.4)
+
+Domande per la mail (1.3):
+- `disc_radius` = 350 è il valore giusto per `Flux_*` e `N_dist_*`?
+- gli output `ThetaY_*` vanno bene così (compreso `ThetaY_axis1` vuoto)?
+- la configurazione del tracking per gli esperimenti 49–65
 
 - Data mail inviata: [placeholder]
 - Data risposta: [placeholder]
@@ -108,7 +118,7 @@ backend/.venv/Scripts/python -m pip install numpy==2.3.5 pandas==2.3.3 scipy==1.
 backend/.venv/Scripts/python backend/scripts/make_reference.py
 ```
 
-Su Linux/macOS il percorso è `backend/.venv/bin/python`. Lo script lavora in una cartella temporanea e scrive in `reference/` solo i `.txt.gz` della tabella sopra, con fine riga LF e header gzip senza data: con gli stessi input e le stesse versioni due esecuzioni danno file identici byte per byte, quindi `git status` resta pulito se non cambia niente. Alla fine stampa il confronto con il file di tumbling dell'operatrice.
+Su Linux/macOS il percorso è `backend/.venv/bin/python`. Lo script lavora in una cartella temporanea e scrive in `reference/` solo i `.txt.gz` della sezione 4, con fine riga LF e header gzip senza data: con gli stessi input e le stesse versioni due esecuzioni danno file identici byte per byte, quindi `git status` resta pulito se non cambia niente. Alla fine stampa il confronto byte per byte con i cinque file del laboratorio (se un file non è ancora tra gli input, lo segnala con un `[WARN]`).
 
 Per avere anche i grafici PDF (da tenere fuori dal repo):
 

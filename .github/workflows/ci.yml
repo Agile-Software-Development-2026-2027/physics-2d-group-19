@@ -1,7 +1,6 @@
 # CI: runs on every pull request and on every push to main.
 # The job "test" is a required check on main: a pull request cannot be merged until it is green.
-# Do not rename it. It aggregates the other jobs: add every new job to its "needs" list.
-# Do not add a workflow-level "paths" filter: a skipped workflow leaves "test" pending forever.
+# Do not rename the job.
 name: CI
 
 on:
@@ -22,11 +21,13 @@ jobs:
     name: backend (lint + test)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      MPLBACKEND: Agg
     defaults:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -48,7 +49,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

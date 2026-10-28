@@ -1,1 +1,4 @@
+# I .txt delle fixture restano LF anche su Windows (rtol=1e-9, confronto riga per riga)
+backend/tests/fixtures/**/*.txt text eol=lf
+*.gz binary
 backend/tests/fixtures/** -diff -text linguist-generated

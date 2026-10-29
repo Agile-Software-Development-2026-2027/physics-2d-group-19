@@ -22,7 +22,7 @@ const createExperementHandler = http.post('/api/experiments' , async ({ request 
         {status : 200})
 })
 
-const getExperementHandler = http.get('/api/experiments/:id' , () => {
+const getExperementHandler = http.get('/api/experiments/:id' , ({params}) => {
     return HttpResponse.json(
         { id: params.id , exps : 49 , exp_type : 1 , ill : 14 , intensity : 180 },
         {status : 200})

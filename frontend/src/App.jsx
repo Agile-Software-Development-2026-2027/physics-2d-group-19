@@ -1,13 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useEffect, useState } from 'react'
+import { getHealth } from './api/client.js'
 
-import { LoginPage } from './pages/LoginPage'
-import { ExperimentPage } from './pages/ExperimentPage'
-import { ProcessingPage } from './pages/ProcessingPage'
-import { ResultsPage } from './pages/ResultsPage'
+import { ExperimentPage } from './pages/ExperimentPage.jsx'
+import { ResultsPage } from './pages/ResultsPage.jsx'
+import { LoginPage } from './pages/LoginPage.jsx'
+import { ProcessingPage } from './pages/ProcessingPage.jsx'
 
-export function App() {
+export default function App() {
   const [backendStatus, setBackendStatus] = useState('checking')
 
   useEffect(() => {
@@ -18,7 +19,6 @@ export function App() {
 
   return (
     <BrowserRouter>
-      {/* Indicatore dello stato del backend visibile in tutte le pagine (US-15)  (messo per il momento)*/}
       <header style={{ padding: '8px', borderBottom: '1px solid #ccc' }}>
         <span>Backend: {backendStatus}</span>
       </header>
@@ -58,5 +58,3 @@ export function App() {
     </BrowserRouter>
   )
 }
-
-export default App

@@ -47,11 +47,12 @@ def assert_tables_close(
         for c in expected_cols:
             if c not in sort_keys:
                 sort_keys.append(c)
-    else:
-        sort_keys = expected_cols
 
-    actual_aligned = actual_aligned.sort_values(by=sort_keys).reset_index(drop=True)
-    expected_aligned = expected_aligned.sort_values(by=sort_keys).reset_index(drop=True)
+        actual_aligned = actual_aligned.sort_values(by=sort_keys).reset_index(drop=True)
+        expected_aligned = expected_aligned.sort_values(by=sort_keys).reset_index(drop=True)
+    else:
+        actual_aligned = actual_aligned.reset_index(drop=True)
+        expected_aligned = expected_aligned.reset_index(drop=True)
 
     # Column by column comparison
     for col in expected_cols:

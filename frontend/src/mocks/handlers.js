@@ -1,7 +1,9 @@
+// Provisional: align with backend/app/schemas once US-3 (3.2, 3.3) is merged
+
 import { http , HttpResponse } from 'msw'
 
 const healthHandler = http.get('/api/health',() => {
-    return HttpResponse.json({status:200})
+    return HttpResponse.json({status:'ok'})
 })
 
 const loginHandler  = http.post('/api/auth/login' , async ({ request }) => {
@@ -16,18 +18,18 @@ const loginHandler  = http.post('/api/auth/login' , async ({ request }) => {
 
 const meHandler = http.get('/api/auth/me' , () => {
     return HttpResponse.json(
-        { username : 'operator' , role : 'operator'},
+        { username : 'operator'},
         { status : 200 })
 })
 
-const createExperementHandler = http.post('/api/experiments' , async ({ request }) => {
+const createExperimentHandler = http.post('/api/experiments' , async ({ request }) => {
     const body = await request.json()
     return HttpResponse.json(
         { id:'exp-49' , ...body },
         {status : 200})
 })
 
-const getExperementHandler = http.get('/api/experiments/:id' , ({params}) => {
+const getExperimentHandler = http.get('/api/experiments/:id' , ({params}) => {
     return HttpResponse.json(
         {   id : params.id ,
             exps : 49 , exp_type : 1 , ill : 14 , intensity : 180 , pix_arr : 1.041667 , 
@@ -37,7 +39,7 @@ const getExperementHandler = http.get('/api/experiments/:id' , ({params}) => {
 
 const defaultParamsHandler = http.get('/api/params/defaults' , () => {
     return HttpResponse.json(
-        { // dati per ora messi cosi , ma da verificare dalla US3
+        { 
             tracking: {
                 diameter: 5,
                 minmass: 180,
@@ -51,10 +53,15 @@ const defaultParamsHandler = http.get('/api/params/defaults' , () => {
                 dt: 0.1,
                 tumbling_threshold: 5.0,
                 diam: 10,
-                disc_radius: 350
+                disc_radius: 130,
+                lifetime_min:0,
+                threshold_dist:1,
+                threshold_dist_tot:3,
+                blinking_ratio:0.5,
+                color:2
             },
             limits: {
-                // in seguito 
+                
             }
         },
         {status : 200}
@@ -74,8 +81,8 @@ export const handlers = [
     healthHandler,
     loginHandler , 
     meHandler , 
-    createExperementHandler,
-    getExperementHandler,
+    createExperimentHandler,
+    getExperimentHandler,
     defaultParamsHandler,
     runStatusHandler
 ]

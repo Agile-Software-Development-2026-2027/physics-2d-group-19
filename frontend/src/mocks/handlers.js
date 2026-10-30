@@ -68,9 +68,23 @@ const getDefaultParamsHandler = http.get('/api/params/defaults' , () => {
 })
     
 const getRunStatusHandler = http.get('/api/runs/:id' , ({params}) => {
-    return HttpResponse.json(
-        { id : params.id , status:'completed' , progress : 100 },
-    )
+    if (params.id === 'run-queued')
+        return HttpResponse.json(
+            { id : params.id , status:'queued'  },
+        )
+    else if (params.id === 'run-tracking')
+        return HttpResponse.json(
+            { id : params.id , status:'running' },
+        )
+    else if (params.id === 'run-error')
+        return HttpResponse.json(
+            { id : params.id , status:'error' , messagge : 'An error occured'}
+            
+        )
+    else
+        return HttpResponse.json(
+            { id : params.id , status:'completed' , progress : 100 },
+        )
 })
 
 const uploadIlluminationHandler = http.post('/api/experiments/:id/illumination' , ({params}) =>{
@@ -91,7 +105,46 @@ const getVideoPreviewHandler = http.get('/api/videos/:id/preview' , ({params}) =
     )
 })
 
+const startRunHandler = http.post('/api/runs', () => {
+  return HttpResponse.json({ id: 'run-queued', status: 'queued' }, { status: 202 })
+})
 
+
+const listRunsHandler = http.get('/api/runs', () => {
+  return HttpResponse.json([
+    { id: 'run-completed', experiment_id: 'exp-49', status: 'completed', created_at: '2026-10-29T10:00:00' },
+    { id: 'run-error', experiment_id: 'exp-49', status: 'error', created_at: '2026-10-28T09:30:00' },
+  ])
+})
+
+
+const getRunResultsHandler = http.get('/api/runs/:id/results', () => {
+  return HttpResponse.json({
+    theta: { x: [0, 1, 2], y: [0.1, 0.2, 0.3] },
+    flux: { x: [0, 1, 2], y: [5, 6, 7] },
+    omega: { x: [0, 1, 2], y: [1, 2, 3] },
+  })
+})
+
+
+const downloadResultCsvHandler = http.get('/api/runs/:id/results/:quantity.csv', () =>{
+    return HttpResponse.json(
+        {content : 'content'}
+    )
+})
+
+const plotNames = ['theta', 'flux', 'angle', 'omega', 'nt', 'tumbling', 'density']
+
+const listPlotsHandler = http.get('/api/runs/:id/plots', () => {
+  return HttpResponse.json(plotNames)
+})
+
+
+const downloadPlotHandler = http.get('/api/runs/:id/plots/:name.png', () =>{
+    return HttpResponse.json(
+        {content : 'content'}
+    )
+})
 
 
 export const handlers = [
@@ -104,6 +157,12 @@ export const handlers = [
     getRunStatusHandler,
     uploadIlluminationHandler,
     uploadVideoHandler,
-    getVideoPreviewHandler
+    getVideoPreviewHandler,
+    startRunHandler,
+    listRunsHandler,
+    getRunResultsHandler,
+    downloadResultCsvHandler,
+    listPlotsHandler,
+    downloadPlotHandler,
 ]
 

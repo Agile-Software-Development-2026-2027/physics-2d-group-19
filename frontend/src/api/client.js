@@ -1,4 +1,3 @@
-// Empty by default: requests go to the same origin (Vite proxy in dev, reverse proxy in prod).
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 export async function apiFetch(path, options = {}) {
@@ -8,3 +7,4 @@ export async function apiFetch(path, options = {}) {
 }
 
 export const getHealth = () => apiFetch('/health')
+export const getToken = () => sessionStorage.getItem('token')

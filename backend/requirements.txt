@@ -43,3 +43,5 @@ uvicorn[standard]>=0.28.0
 pydantic>=2.6.0
 pydantic-settings>=2.0.0
 python-multipart>=0.0.18
+
+argon2-cffi>=23.1.0

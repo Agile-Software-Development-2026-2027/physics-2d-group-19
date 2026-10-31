@@ -25,6 +25,16 @@ Tokens use HS256 with `sub` and UTC `exp` claims. Decoding returns the username;
 invalid tokens raise `jwt.InvalidTokenError`, including `jwt.ExpiredSignatureError`.
 The API authentication dependency is responsible for turning these errors into HTTP 401.
 
-Set `APP_JWT_SECRET` through the environment or an uncommitted `.env` file before use;
+Set `APP_JWT_SECRET` through the environment or a local `.env` file before use;
 the default `change-me` is only a local placeholder, not a deployment secret.
 `APP_JWT_EXPIRE_MINUTES` defaults to 480. Tests may use a negative duration for expired tokens.
+
+To configure a local secret, copy `.env.example` to `.env` and replace its placeholder
+with a random value. Generate one from this directory with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Keep `.env` local; it is ignored by Git. The committed `.env.example` contains only a
+placeholder, never a real signing secret.

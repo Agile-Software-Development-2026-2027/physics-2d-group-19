@@ -1,10 +1,17 @@
 from pathlib import Path
+
 import pandas as pd
 
 from core.clam_pipeline.analyze import AnalysisOutputs
 
 
-def save_analysis_results(exp_id: str | int, disc_radius: float, tumbling_threshold: float, results_data: AnalysisOutputs, output_dir: Path) -> dict[str, Path]:
+def save_analysis_results(
+    exp_id: str | int,
+    disc_radius: float,
+    tumbling_threshold: float,
+    results_data: AnalysisOutputs,
+    output_dir: Path,
+) -> dict[str, Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     saved_files: dict[str, Path] = {}
 
@@ -36,6 +43,5 @@ def save_analysis_results(exp_id: str | int, disc_radius: float, tumbling_thresh
             compression = "gzip" if use_gzip else None
             df.to_csv(legacy_path, sep="\t", index=False, compression=compression)
             saved_files[f"{attr_name}"] = legacy_path
-
 
     return saved_files

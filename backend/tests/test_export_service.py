@@ -1,6 +1,6 @@
 from pathlib import Path
+
 import pandas as pd
-import pytest
 
 from app.services.export_services import save_analysis_results
 
@@ -37,7 +37,7 @@ def test_save_analysis_results_matches_fixtures(tmp_path):
         disc_radius=150.0,
         tumbling_threshold=5.0,
         results_data=RealOutputsMock(),
-        output_dir=tmp_path
+        output_dir=tmp_path,
     )
 
     # 3. ASSERT
@@ -53,8 +53,7 @@ def test_save_analysis_results_matches_fixtures(tmp_path):
     theta_y_0_path = saved_files["theta_y_axis0"]
     assert theta_y_0_path.exists()
     pd.testing.assert_frame_equal(
-        pd.read_csv(theta_y_0_path, sep="\t", compression="gzip"),
-        theta_y_0_df
+        pd.read_csv(theta_y_0_path, sep="\t", compression="gzip"), theta_y_0_df
     )
 
     # Check for the presence of generated CSV files

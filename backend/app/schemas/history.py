@@ -13,7 +13,11 @@ class HistoryItem(BaseModel):
     status: JobStatus = Field(description="Final or current status")
     video_filename: str = Field(description="Name of the processed video")
     created_at: datetime = Field(description="Execution start timestamp")
-    duration_seconds: float | None = Field(default=None, ge=0.0, description="Processing duration in seconds")
+    duration_seconds: float | None = Field(
+        default=None,
+        ge=0.0,
+        description="Processing duration in seconds",
+    )
 
 
 class HistoryResponse(BaseModel):
@@ -21,4 +25,3 @@ class HistoryResponse(BaseModel):
 
     items: list[HistoryItem] = Field(default_factory=list, description="List of previous jobs")
     total: int = Field(ge=0, description="Total number of historical runs")
-

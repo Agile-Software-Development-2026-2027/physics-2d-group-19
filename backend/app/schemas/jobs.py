@@ -1,11 +1,11 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     QUEUED = "queued"
     TRACKING = "tracking"
     ANALYZING = "analyzing"
@@ -19,8 +19,14 @@ class JobCreate(BaseModel):
 
     experiment_id: int = Field(ge=0, description="Experiment identifier")
     video_filename: str = Field(min_length=1, description="Uploaded video filename")
-    tracking_params: dict[str, Any] | None = Field(default=None, description="Tracking configuration overrides")
-    analysis_params: dict[str, Any] | None = Field(default=None, description="Analysis configuration overrides")
+    tracking_params: dict[str, Any] | None = Field(
+        default=None,
+        description="Tracking configuration overrides",
+    )
+    analysis_params: dict[str, Any] | None = Field(
+        default=None,
+        description="Analysis configuration overrides",
+    )
 
 
 class JobResponse(BaseModel):
@@ -33,4 +39,3 @@ class JobResponse(BaseModel):
     created_at: datetime = Field(description="Job submission timestamp")
     completed_at: datetime | None = Field(default=None, description="Job completion timestamp")
     error_message: str | None = Field(default=None, description="Error details if the job failed")
-

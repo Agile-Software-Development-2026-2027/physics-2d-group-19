@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -36,7 +36,7 @@ def test_job_create_extra_field_forbidden():
 
 
 def test_job_response_valid():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     res = JobResponse(
         job_id="job-123",
         status=JobStatus.TRACKING,
@@ -51,7 +51,7 @@ def test_job_response_valid():
 
 
 def test_job_response_invalid_status():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     with pytest.raises(ValidationError):
         JobResponse(
             job_id="job-123",
@@ -75,7 +75,7 @@ def test_results_and_plots_schemas():
 
 
 def test_history_schemas():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     item = HistoryItem(
         job_id="job-49",
         experiment_id=49,
@@ -124,4 +124,3 @@ def test_preview_response():
     )
     assert resp.detected_cells == 42
     assert "sampled background" in resp.note
-

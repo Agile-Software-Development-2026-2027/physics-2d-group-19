@@ -16,7 +16,15 @@ class JobResultsResponse(BaseModel):
 
     job_id: str = Field(description="Job execution identifier")
     status: str = Field(default="completed", description="Status of the result")
-    plots: list[PlotItem] = Field(default_factory=list, description="List of generated plot graphics")
-    data_files: list[str] = Field(default_factory=list, description="List of generated CSV or legacy TXT files")
-    summary: dict[str, Any] = Field(default_factory=dict, description="Summary physical metrics dictionary")
-
+    plots: list[PlotItem] = Field(
+        default_factory=list,
+        description="List of generated plot graphics",
+    )
+    data_files: list[str] = Field(
+        default_factory=list,
+        description="List of generated CSV or legacy TXT files",
+    )
+    summary: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Summary physical metrics dictionary",
+    )

@@ -9,11 +9,9 @@ const healthHandler = http.get('/api/health',() => {
 const loginHandler  = http.post('/api/auth/login' , async ({ request }) => {
     const body = await request.json()
     if (body.username === 'operator' && body.password === 'secret')
-        return HttpResponse.json(
-        {access_token : 'jwt_token' , token_type : 'bearer'},
-        )
+        return HttpResponse.json({ token : 'jwt_token' })
     else
-        return HttpResponse.json({detail : 'Incorrect username or password'},{status:401})
+        return HttpResponse.json({ detail : 'Incorrect username or password' }, { status : 401 })
 })
 
 const getCurrentUserHandler = http.get('/api/auth/me' , () => {

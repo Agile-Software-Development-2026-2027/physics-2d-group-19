@@ -2,3 +2,6 @@
 backend/tests/fixtures/**/*.txt text eol=lf
 *.gz binary
 backend/tests/fixtures/** -diff -text linguist-generated
+# Keep these files byte-identical to their sources, whatever core.autocrlf is
+backend/app/resources/talgae_settings.txt text eol=lf
+frontend/public/mockServiceWorker.js text eol=lf

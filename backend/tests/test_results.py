@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
+from app.services.results import save_legacy_txt
 from core.clam_pipeline.analyze import AnalysisParams, FilterParams, analyze_experiment
 from core.clam_pipeline.io import load_settings, load_trajectories_txt
-from app.services.results import save_legacy_txt
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "exp49"
 

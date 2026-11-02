@@ -1,10 +1,6 @@
-from pathlib import Path
-
+"""from pathlib import Path
 import pandas as pd
-
 from core.clam_pipeline.analyze import AnalysisOutputs
-
-
 def save_analysis_results(
     exp_id: str | int,
     disc_radius: float,
@@ -44,4 +40,11 @@ def save_analysis_results(
             df.to_csv(legacy_path, sep="\t", index=False, compression=compression)
             saved_files[f"{attr_name}"] = legacy_path
 
-    return saved_files
+    return saved_files"""
+from pathlib import Path
+
+from core.clam_pipeline.analyze import AnalysisOutputs, AnalysisParams
+
+
+def save_legacy_txt(outputs: AnalysisOutputs, results_dir: Path, exp_id: int, params: AnalysisParams) -> list[Path]:
+    pass

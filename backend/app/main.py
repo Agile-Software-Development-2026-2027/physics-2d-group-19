@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
         dependencies=[Depends(get_current_user)],
     )
     app.include_router(history.router, prefix="/api")
+    app.include_router(jobs.router, prefix="/api")
 
     return app
 

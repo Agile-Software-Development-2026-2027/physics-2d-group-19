@@ -5,8 +5,7 @@ import pandas as pd
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile
 
 from app.config import get_settings
-from app.services.jobs_store import run_job
-from app.services.jobs_store import create_job, job_dir
+from app.services.jobs_store import create_job, job_dir, run_job
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 

@@ -7,6 +7,15 @@ import uuid
 from pathlib import Path
 
 
+def run_job(data_dir: Path, job_id: str) -> None:
+    try:
+        write_status(data_dir, job_id, status="processing")
+
+        write_status(data_dir, job_id, status="completed")
+    except Exception as exc:
+        write_status(data_dir, job_id, status="failed", error=str(exc))
+
+
 def _save_status(directory: Path, payload: dict) -> None:
     serialized = json.dumps(payload)
     temporary = directory / "status.json.tmp"

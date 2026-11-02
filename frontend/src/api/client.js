@@ -153,6 +153,7 @@ export async function getHistoryElaborations() {
 }
 
 export const getHealth = () => apiFetch('/health')
+export const getMe = () => apiFetch('/auth/me')
 export const getToken = () => sessionStorage.getItem('token')
 export const setToken = (token) => sessionStorage.setItem('token', token)
 export const clearToken = () => sessionStorage.removeItem('token')

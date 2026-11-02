@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.deps import get_current_user
 from app.config import get_settings
 from app.schemas.auth import LoginRequest, TokenResponse
 from app.security import create_access_token, verify_password
@@ -29,3 +30,8 @@ def login(data: LoginRequest):
     # Everything is ok: create the token and send it back
     token = create_access_token(data.username)
     return TokenResponse(token=token)
+
+
+@router.get("/me")
+def me(user: str = Depends(get_current_user)) -> dict[str, str]:
+    return {"username": f"{user}"}

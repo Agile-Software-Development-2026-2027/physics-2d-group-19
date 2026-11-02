@@ -7,6 +7,7 @@ import { ExperimentPage } from './pages/ExperimentPage.jsx'
 import { ResultsPage } from './pages/ResultsPage.jsx'
 import { LoginPage } from './pages/LoginPage.jsx'
 import { ProcessingPage } from './pages/ProcessingPage.jsx'
+import { Header } from './components/Header.jsx'
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState('checking')
@@ -19,9 +20,9 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <header style={{ padding: '8px', borderBottom: '1px solid #ccc' }}>
+      <Header>
         <span>Backend: {backendStatus}</span>
-      </header>
+      </Header>
       <Routes>
         {/* Rotta pubblica */}
         <Route path="/login" element={<LoginPage />} />

@@ -11,6 +11,8 @@ class Settings(BaseSettings):
 
     data_dir: Path = Path("data")
     cors_origins: list[str] = ["http://localhost:5173"]
+    jwt_secret: str = "change-me"
+    jwt_expire_minutes: int = 480
 
 
 @lru_cache

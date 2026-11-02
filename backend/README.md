@@ -18,6 +18,15 @@ ruff check . && ruff format .   # lint and format
 The frontend dev server (`frontend/`, port 5173) proxies `/api` to this backend on port 8000.
 How to write tests and the team rules are in [`TESTING.md`](../TESTING.md).
 
+## Users
+
+Create the first user from `backend/` (the password is asked twice and never shown):
+
+```bash
+python -m app.users create operator
+python -m app.users list
+```
+
 ## Access tokens
 
 `app.security` exports `create_access_token(username)` and `decode_access_token(token)`.

@@ -31,6 +31,10 @@ export async function login(username, password) {
 
   if (data.token) {
     setToken(data.token)
+  } else {
+    throw new Error(
+      data?.detail || 'Login fallito: token non ricevuto dal server.',
+    )
   }
   return data
 }
@@ -54,12 +58,7 @@ export async function uploadExperimentSettings(settings) {
 }
 
 export async function getExperiment(id) {
-  const data = await apiFetch(`/experiments/${id}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id }),
-  })
-  return data
+  return await apiFetch(`/experiments/${id}`)
 }
 
 export async function uploadIllumination(id, imgFile) {
@@ -149,7 +148,7 @@ export async function getPlotImageUrl(id, plotName) {
   return URL.createObjectURL(imageBlob)
 }
 
-export async function getHystoryElaborations() {
+export async function getHistoryElaborations() {
   return await apiFetch(`/runs`)
 }
 

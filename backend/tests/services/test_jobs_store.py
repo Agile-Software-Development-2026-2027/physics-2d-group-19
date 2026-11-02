@@ -14,12 +14,16 @@ def test_create_job_has_isolated_folders_and_initial_status(tmp_path):
     assert directory == tmp_path / "jobs" / job_id
     assert {p.name for p in directory.iterdir()} == {
         "input",
+        "parameters",
         "tracking",
         "results",
         "plots",
         "status.json",
     }
-    assert all((directory / name).is_dir() for name in ("input", "tracking", "results", "plots"))
+    assert all(
+        (directory / name).is_dir()
+        for name in ("input", "parameters", "tracking", "results", "plots")
+    )
     assert store.read_status(tmp_path, job_id) == {
         "job_id": job_id,
         "exp_id": 49,

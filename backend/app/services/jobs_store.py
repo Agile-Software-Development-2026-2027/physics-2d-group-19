@@ -26,7 +26,7 @@ def create_job(data_dir: Path, exp_id: int) -> str:
         except FileExistsError:
             continue
         break
-    for name in ("input", "tracking", "results", "plots"):
+    for name in ("input", "parameters", "tracking", "results", "plots"):
         (directory / name).mkdir()
     _save_status(directory, {"job_id": job_id, "exp_id": exp_id, "status": "queued", "error": None})
     return job_id

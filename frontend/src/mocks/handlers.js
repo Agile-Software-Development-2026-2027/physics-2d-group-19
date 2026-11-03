@@ -131,17 +131,21 @@ const downloadResultCsvHandler = http.get('/api/runs/:id/results/:quantity.csv',
     )
 })
 
-const plotNames = ['theta', 'flux', 'angle', 'omega', 'nt', 'tumbling', 'density']
-
-const listPlotsHandler = http.get('/api/runs/:id/plots', () => {
-  return HttpResponse.json(plotNames)
+const plotItems = (id) => [
+  { name: 'theta_distribution', url: `/api/jobs/${id}/plots/theta_distribution.png`, error: null },
+  { name: 'flux', url: null, error: 'boom' },
+  { name: 'omega_distribution', url: `/api/jobs/${id}/plots/omega_distribution.png`, error: null },
+]
+// Cannot use id because MSW passes a params object to the function
+const listPlotsHandler = http.get('/api/jobs/:id/plots', ({params}) => {
+  return HttpResponse.json(plotItems(params.id))
 })
 
 
-const downloadPlotHandler = http.get('/api/runs/:id/plots/:name.png', () =>{
-    return HttpResponse.json(
-        {content : 'content'}
-    )
+const downloadPlotHandler = http.get('/api/jobs/:id/plots/:name.png', () =>{
+  return new HttpResponse(new Uint8Array([137, 80, 78, 71]), {
+      headers: {'Content-Type': 'image/png'},
+    })
 })
 
 

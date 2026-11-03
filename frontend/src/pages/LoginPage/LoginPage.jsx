@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../../api/client.js'
-import './LoginPage.module.css'
+import styles from './LoginPage.module.css'
 
 export function LoginPage() {
   const [username, setUsername] = useState('')
@@ -27,34 +27,34 @@ export function LoginPage() {
   }
 
   return (
-    <div className='login-page'>
+    <div className={styles.loginPage}>
       <form onSubmit={handleSubmit}>
-      <h1>Login</h1>
+        <h1>Login</h1>
 
-      <div>
-        <label>
-          Username
-          <input value={username} onChange={(e) => setUsername(e.target.value)} />
-        </label>
-      </div>
+        <div>
+          <label>
+            Username
+            <input value={username} onChange={(e) => setUsername(e.target.value)} />
+          </label>
+        </div>
 
-      <div>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-      </div>
+        <div>
+          <label>
+            Password
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+        </div>
 
-      <p>{error}</p>
+        <p>{error}</p>
 
-      <button type="submit" disabled={sending}>
-        Login
-      </button>
-    </form>
+        <button type="submit" disabled={sending}>
+          Login
+        </button>
+      </form>
     </div>
   )
 }

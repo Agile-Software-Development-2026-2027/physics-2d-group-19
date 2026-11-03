@@ -6,7 +6,7 @@ import styles from './MainLayout.module.css'
 export function MainLayout({backendStatus}) {
   return (
     <div className={styles.appLayout}>
-      <Header>
+      <Header backendStatus={backendStatus}>
         <span>Backend: {backendStatus}</span>
       </Header>
       <main className={styles.mainContent}>

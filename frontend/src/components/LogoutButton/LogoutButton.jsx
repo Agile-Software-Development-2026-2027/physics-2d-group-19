@@ -10,7 +10,7 @@ export function LogoutButton() {
   }
 
   return (
-    <button type="button" onClick={handleClick}>
+    <button type="button" className="cursor-pointer hover:bg-gray-400" onClick={handleClick}>
       Esci
     </button>
   )

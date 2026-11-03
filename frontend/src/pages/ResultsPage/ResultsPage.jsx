@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getPlotImageUrl, getPlotsList } from '../../api/client.js'
-import './ResultsPage.module.css'
+import styles from './ResultsPage.module.css'
 
 const TITLES = {
   theta_distribution: 'Distribuzione di θ',
@@ -61,19 +61,19 @@ export function ResultsPage() {
   }, [jobId])
 
   return (
-    <main className="results-page">
+    <main className={styles.resultsPage}>
       <h1>Risultati dell'elaborazione</h1>
       {message && (
-        <p role="alert" className="results-message">
+        <p role="alert" className={styles.resultsPage}>
           {message}
         </p>
       )}
-      <div className="plot-grid">
+      <div className={styles.plotGrid}>
         {plots.map((plot) => {
           const title = TITLES[plot.name] ?? plot.name
           const src = images[plot.name]
           return (
-            <figure key={plot.name} className="plot-card">
+            <figure key={plot.name} className={styles.plotCard}>
               <figcaption>{title}</figcaption>
               {src ? (
                 <>
@@ -83,7 +83,7 @@ export function ResultsPage() {
                   </a>
                 </>
               ) : (
-                <p className="plot-missing">
+                <p className={styles.plotMissing}>
                   {plot.url ? 'Caricamento…' : 'Grafico non disponibile'}
                 </p>
               )}

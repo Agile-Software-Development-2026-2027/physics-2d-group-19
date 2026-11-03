@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Colori e misure condivisi da tutta l'app */
+/* Colori e misure condivisi da tutta l'app
 :root {
   --color-bg: #ffffff;
   --color-text: #1f2328;
@@ -14,51 +14,27 @@
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--color-text);
   background: var(--color-bg);
+}*/
+@theme {
+  --font-sponge: 'Sponge Lump', sans-serif;
+  --font-young: 'Young Serif', serif;
+
+  --color-bg: #ffffff;
+  --color-header: #e6ece4;
+  --color-secondary: #659377;
+  --color-muted: #59636e;
+  --color-border: #d1d9e0;
+  --color-surface: #f6f8fa;
+  --color-tertiary: #000000;
+  --color-primary: #ffffff;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@font-face {
+  font-family: 'Sponge Lump';
 }
 
-body {
-  margin: 0;
-}
-
-/* Header: stato del backend a sinistra, utente e «Esci» a destra */
-.site-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.header-status {
-  font-size: 0.875rem;
-  color: var(--color-muted);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-left: auto;
-}
-
-.header-actions button {
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-bg);
-  color: var(--color-text);
-  font: inherit;
-  cursor: pointer;
-}
-
-.header-actions button:hover {
-  background: var(--color-surface);
+.young-serif-regular {
+  font-family: "Young Serif", serif;
+  font-weight: 400;
+  font-style: normal;
 }

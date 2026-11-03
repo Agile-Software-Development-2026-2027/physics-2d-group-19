@@ -1,3 +1,3 @@
 export function ProcessingPage() {
-  return <div>Pagina di Processing</div>
+  return <div className="text-center p-40 font-sponge text-secondary text-4xl">Pagina di Elaborazione work in progress...</div>
 }

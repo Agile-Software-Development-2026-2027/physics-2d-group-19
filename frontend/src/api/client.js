@@ -135,6 +135,16 @@ export async function downloadElaborationResultCsv(id, grandezza) {
   link.remove()
   URL.revokeObjectURL(url)
 }
+
+// POST /api/jobs -> create_job
+export async function createJob(formData) {
+  return await apiFetch('/jobs', { method: 'POST', body: formData })
+}
+// GET /api/jobs/{job_id} -> get_job
+export async function getJob(id) {
+  return await apiFetch(`/jobs/${id}`)
+}
+
 // GET /api/jobs/{job_id}/plots/ -> list_plots (backend/app/api/plots.py)
 export async function getPlotsList(id) {
   return await apiFetch(`/jobs/${id}/plots`)

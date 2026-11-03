@@ -20,21 +20,19 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Health check
+    # Public routers
     app.include_router(health.router, prefix="/api")
-
-    # API routers
     app.include_router(auth.router, prefix="/api")
-    app.include_router(experiments.router, prefix="/api")
-    app.include_router(upload.router, prefix="/api")
-    app.include_router(preview.router, prefix="/api")
-    app.include_router(params.router, prefix="/api")
-    app.include_router(
-        jobs.router,
-        prefix="/api",
-        dependencies=[Depends(get_current_user)],
-    )
-    app.include_router(history.router, prefix="/api")
+
+    # Protected API routers
+    protected = [Depends(get_current_user)]
+
+    app.include_router(experiments.router, prefix="/api", dependencies=protected)
+    app.include_router(upload.router, prefix="/api", dependencies=protected)
+    app.include_router(preview.router, prefix="/api", dependencies=protected)
+    app.include_router(params.router, prefix="/api", dependencies=protected)
+    app.include_router(jobs.router, prefix="/api", dependencies=protected)
+    app.include_router(history.router, prefix="/api", dependencies=protected)
 
     return app
 

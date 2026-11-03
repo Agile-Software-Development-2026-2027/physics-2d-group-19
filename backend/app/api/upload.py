@@ -15,14 +15,16 @@ async def upload_video(file: UploadFile) -> UploadResponse:
             detail="Invalid video format. Only .avi files are supported.",
         )
 
-    # In mock contract, simulate reading size
-    content = await file.read()
-    size_bytes = len(content) if content else 1024 * 1024
+    if not file.size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Empty file.",
+        )
 
     return UploadResponse(
         filename=filename,
         file_type="video",
-        size_bytes=size_bytes,
+        size_bytes=file.size,
         message="Video uploaded successfully",
     )
 
@@ -37,12 +39,15 @@ async def upload_illumination(file: UploadFile) -> UploadResponse:
             detail="Invalid illumination image format. Only .tiff and .tif files are supported.",
         )
 
-    content = await file.read()
-    size_bytes = len(content) if content else 512 * 1024
+    if not file.size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Empty file.",
+        )
 
     return UploadResponse(
         filename=filename,
         file_type="illumination",
-        size_bytes=size_bytes,
+        size_bytes=file.size,
         message="Illumination image uploaded successfully",
     )

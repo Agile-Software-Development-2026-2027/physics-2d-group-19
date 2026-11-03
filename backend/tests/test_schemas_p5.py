@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.history import HistoryItem, HistoryResponse
-from app.schemas.jobs import JobCreate, JobResponse, JobStatus
+from app.schemas.jobs import JobResponse, JobStatus
 from app.schemas.preview import PreviewRequest, PreviewResponse
 from app.schemas.results import JobResultsResponse, PlotItem
 from app.schemas.upload import UploadResponse
@@ -13,73 +13,70 @@ from app.schemas.upload import UploadResponse
 def test_job_status_values():
     assert JobStatus.QUEUED.value == "queued"
     assert JobStatus.TRACKING.value == "tracking"
-    assert JobStatus.ANALYZING.value == "analyzing"
+    assert JobStatus.ANALYSIS.value == "analysis"
     assert JobStatus.PLOTS.value == "plots"
-    assert JobStatus.COMPLETED.value == "completed"
-    assert JobStatus.FAILED.value == "failed"
-
-
-def test_job_create_valid():
-    job_in = JobCreate(
-        experiment_id=49,
-        video_filename="tAlgae49.avi",
-        tracking_params={"diameter": 5, "minmass": 180},
-    )
-    assert job_in.experiment_id == 49
-    assert job_in.video_filename == "tAlgae49.avi"
-    assert job_in.tracking_params["diameter"] == 5
-
-
-def test_job_create_extra_field_forbidden():
-    with pytest.raises(ValidationError):
-        JobCreate(experiment_id=49, video_filename="test.avi", extra_field=123)
+    assert JobStatus.DONE.value == "done"
+    assert JobStatus.ERROR.value == "error"
 
 
 def test_job_response_valid():
-    now = datetime.now(UTC)
     res = JobResponse(
         job_id="job-123",
+        exp_id=49,
         status=JobStatus.TRACKING,
-        current_phase="Tracking cells",
-        progress=0.45,
-        created_at=now,
     )
     assert res.job_id == "job-123"
+    assert res.exp_id == 49
     assert res.status == JobStatus.TRACKING
-    assert res.progress == 0.45
-    assert res.error_message is None
+    assert res.error is None
+
+
+def test_job_response_error_status():
+    res = JobResponse(
+        job_id="job-123",
+        exp_id=49,
+        status=JobStatus.ERROR,
+        error="Failed during tracking",
+    )
+    assert res.status == JobStatus.ERROR
+    assert res.error == "Failed during tracking"
 
 
 def test_job_response_invalid_status():
-    now = datetime.now(UTC)
     with pytest.raises(ValidationError):
         JobResponse(
             job_id="job-123",
+            exp_id=49,
             status="unknown_status",
-            current_phase="Unknown",
-            created_at=now,
         )
 
 
 def test_results_and_plots_schemas():
-    plot = PlotItem(id="theta", title="Theta Plot", url="/api/jobs/job-1/plots/theta.png")
+    plot_ok = PlotItem(name="theta", url="/api/jobs/job-1/plots/theta.png")
+    plot_failed = PlotItem(name="flux", url=None, error="Failed generating flux plot")
     results = JobResultsResponse(
         job_id="job-1",
-        plots=[plot],
+        status=JobStatus.DONE,
+        plots=[plot_ok, plot_failed],
         data_files=["Theta_exp49.txt"],
         summary={"total_tracks": 150},
     )
-    assert len(results.plots) == 1
-    assert results.plots[0].id == "theta"
-    assert results.data_files == ["Theta_exp49.txt"]
+    assert len(results.plots) == 2
+    assert results.plots[0].name == "theta"
+    assert results.plots[0].url == "/api/jobs/job-1/plots/theta.png"
+    assert results.plots[0].error is None
+    assert results.plots[1].name == "flux"
+    assert results.plots[1].url is None
+    assert results.plots[1].error == "Failed generating flux plot"
+    assert results.status == JobStatus.DONE
 
 
 def test_history_schemas():
     now = datetime.now(UTC)
     item = HistoryItem(
         job_id="job-49",
-        experiment_id=49,
-        status=JobStatus.COMPLETED,
+        exp_id=49,
+        status=JobStatus.DONE,
         video_filename="tAlgae49.avi",
         created_at=now,
         duration_seconds=124.5,
@@ -87,7 +84,8 @@ def test_history_schemas():
     history = HistoryResponse(items=[item], total=1)
     assert history.total == 1
     assert history.items[0].job_id == "job-49"
-    assert history.items[0].status == JobStatus.COMPLETED
+    assert history.items[0].exp_id == 49
+    assert history.items[0].status == JobStatus.DONE
 
 
 def test_upload_schema():

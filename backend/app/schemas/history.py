@@ -9,7 +9,7 @@ class HistoryItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     job_id: str = Field(description="Unique job execution identifier")
-    experiment_id: int = Field(ge=0, description="Experiment identifier")
+    exp_id: int = Field(ge=0, description="Experiment identifier")
     status: JobStatus = Field(description="Final or current status")
     video_filename: str = Field(description="Name of the processed video")
     created_at: datetime = Field(description="Execution start timestamp")

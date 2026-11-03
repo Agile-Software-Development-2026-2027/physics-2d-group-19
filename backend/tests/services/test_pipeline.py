@@ -16,7 +16,10 @@ def test_states_in_order_with_trajectories(tmp_path, monkeypatch):
     monkeypatch.setattr("app.services.pipeline.write_status", spy)
     monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a: "outputs")
     monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a: [])
-    monkeypatch.setattr("app.services.pipeline.generate_plots", lambda *a: {"flux": None})
+    monkeypatch.setattr(
+        "app.services.pipeline.generate_plots",
+        lambda *a: {"flux": str(a[-1] / "flux.png")},
+    )
 
     run_job(tmp_path, job_id)
 
@@ -40,7 +43,10 @@ def test_states_in_order_with_video(tmp_path, monkeypatch):
     monkeypatch.setattr("app.services.pipeline.run_tracking", lambda *a: tracked_txt)
     monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a: "outputs")
     monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a: [])
-    monkeypatch.setattr("app.services.pipeline.generate_plots", lambda *a: {"flux": None})
+    monkeypatch.setattr(
+        "app.services.pipeline.generate_plots",
+        lambda *a: {"flux": str(a[-1] / "flux.png")},
+    )
 
     run_job(tmp_path, job_id)
 
@@ -62,3 +68,21 @@ def test_error_is_recorded(tmp_path, monkeypatch):
     status = read_status(tmp_path, job_id)
     assert status["status"] == "error"
     assert "No trajectories" in status["error"]
+
+
+def test_plot_failure_is_recorded(tmp_path, monkeypatch):
+    job_id = create_job(tmp_path, 49)
+    plots_dir = job_dir(tmp_path, job_id) / "plots"
+    monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a: "outputs")
+    monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a: [])
+    monkeypatch.setattr(
+        "app.services.pipeline.generate_plots",
+        lambda *a: {"flux": str(plots_dir / "flux.png"), "nt_stats": None},
+    )
+
+    run_job(tmp_path, job_id)
+
+    status = read_status(tmp_path, job_id)
+    assert status["status"] == "done"
+    assert status["plots"]["flux"] is None
+    assert status["plots"]["nt_stats"] == "Plot generation failed; see server logs"

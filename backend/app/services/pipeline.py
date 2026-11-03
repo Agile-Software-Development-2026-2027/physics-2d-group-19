@@ -42,7 +42,7 @@ def run_job(data_dir: Path, job_id: str) -> None:
         write_status(data_dir, job_id, "plots")
         raw_plots = generate_plots(results_dir, settings_txt, input_dir, exp_id, plots_dir)
         plot_errors = {
-            name: None if val == str(plots_dir / f"{name}.png") else val
+            name: "Plot generation failed; see server logs" if val is None else None
             for name, val in raw_plots.items()
         }
 

@@ -1,120 +1,141 @@
 // Provisional: align with backend/app/schemas once US-3 (3.2, 3.3) is merged
 
-import { http , HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 
-const healthHandler = http.get('/api/health',() => {
-    return HttpResponse.json({status:'ok'})
+const healthHandler = http.get('/api/health', () => {
+  return HttpResponse.json({ status: 'ok' })
 })
 
-const loginHandler  = http.post('/api/auth/login' , async ({ request }) => {
+const loginHandler = http.post('/api/auth/login', async ({ request }) => {
+  const body = await request.json()
+  if (body.username === 'operator' && body.password === 'secret')
+    return HttpResponse.json({ token: 'jwt_token' })
+  else
+    return HttpResponse.json(
+      { detail: 'Incorrect username or password' },
+      { status: 401 },
+    )
+})
+
+const getCurrentUserHandler = http.get('/api/auth/me', () => {
+  return HttpResponse.json({ username: 'operator' })
+})
+
+const createExperimentHandler = http.post(
+  '/api/experiments',
+  async ({ request }) => {
     const body = await request.json()
-    if (body.username === 'operator' && body.password === 'secret')
-        return HttpResponse.json({ token : 'jwt_token' })
-    else
-        return HttpResponse.json({ detail : 'Incorrect username or password' }, { status : 401 })
+    return HttpResponse.json({ id: 'exp-49', ...body })
+  },
+)
+
+const getExperimentHandler = http.get('/api/experiments/:id', ({ params }) => {
+  return HttpResponse.json({
+    id: params.id,
+    exps: 49,
+    exp_type: 1,
+    ill: 14,
+    intensity: 180,
+    pix_arr: 1.041667,
+    no_skip: 1,
+    ctr: 0,
+    fluo: 0,
+    lin: 0,
+    axis: 0,
+  })
 })
 
-const getCurrentUserHandler = http.get('/api/auth/me' , () => {
-    return HttpResponse.json(
-        { username : 'operator'}
-        )
+const getDefaultParamsHandler = http.get('/api/params/defaults', () => {
+  return HttpResponse.json({
+    tracking: {
+      diameter: 5,
+      minmass: 180,
+      search_range: 10,
+      background_method: 'mean',
+    },
+    analysis: {
+      scradius: 130,
+      thickness: 0,
+      radial_map: false,
+      dt: 0.1,
+      tumbling_threshold: 5.0,
+      diam: 10,
+      disc_radius: 130,
+      lifetime_min: 0,
+      threshold_dist: 1,
+      threshold_dist_tot: 3,
+      blinking_ratio: 0.5,
+      color: 2,
+    },
+    limits: {},
+  })
 })
 
-const createExperimentHandler = http.post('/api/experiments' , async ({ request }) => {
-    const body = await request.json()
-    return HttpResponse.json(
-        { id:'exp-49' , ...body }
-        )
+const getRunStatusHandler = http.get('/api/runs/:id', ({ params }) => {
+  if (params.id === 'run-queued')
+    return HttpResponse.json({ id: params.id, status: 'queued' })
+  else if (params.id === 'run-tracking')
+    return HttpResponse.json({ id: params.id, status: 'running' })
+  else if (params.id === 'run-error')
+    return HttpResponse.json({
+      id: params.id,
+      status: 'error',
+      messagge: 'An error occured',
+    })
+  else
+    return HttpResponse.json({
+      id: params.id,
+      status: 'completed',
+      progress: 100,
+    })
 })
 
-const getExperimentHandler = http.get('/api/experiments/:id' , ({params}) => {
-    return HttpResponse.json(
-        {   id : params.id ,
-            exps : 49 , exp_type : 1 , ill : 14 , intensity : 180 , pix_arr : 1.041667 , 
-            no_skip : 1 , ctr : 0 , fluo : 0 , lin : 0 , axis : 0, }
-        )
+const uploadIlluminationHandler = http.post(
+  '/api/experiments/:id/illumination',
+  ({ params }) => {
+    return HttpResponse.json({ id: params.id, filename: 'illumination14.tiff' })
+  },
+)
+
+const uploadVideoHandler = http.post('/api/videos', () => {
+  return HttpResponse.json({
+    id: 'vid-49',
+    filename: 'tAlgae49.avi',
+    size_mb: 1800,
+    time_sec: 120,
+  })
 })
 
-const getDefaultParamsHandler = http.get('/api/params/defaults' , () => {
-    return HttpResponse.json(
-        { 
-            tracking: {
-                diameter: 5,
-                minmass: 180,
-                search_range: 10,
-                background_method: 'mean'
-            },
-            analysis: {
-                scradius: 130,
-                thickness: 0,
-                radial_map: false,
-                dt: 0.1,
-                tumbling_threshold: 5.0,
-                diam: 10,
-                disc_radius: 130,
-                lifetime_min:0,
-                threshold_dist:1,
-                threshold_dist_tot:3,
-                blinking_ratio:0.5,
-                color:2
-            },
-            limits: {
-                
-            }
-        },
-    )
-})
-    
-const getRunStatusHandler = http.get('/api/runs/:id' , ({params}) => {
-    if (params.id === 'run-queued')
-        return HttpResponse.json(
-            { id : params.id , status:'queued'  },
-        )
-    else if (params.id === 'run-tracking')
-        return HttpResponse.json(
-            { id : params.id , status:'running' },
-        )
-    else if (params.id === 'run-error')
-        return HttpResponse.json(
-            { id : params.id , status:'error' , messagge : 'An error occured'}
-            
-        )
-    else
-        return HttpResponse.json(
-            { id : params.id , status:'completed' , progress : 100 },
-        )
-})
-
-const uploadIlluminationHandler = http.post('/api/experiments/:id/illumination' , ({params}) =>{
-    return HttpResponse.json(
-        {id:params.id , filename : 'illumination14.tiff'},
-    )
-})
-
-const uploadVideoHandler = http.post('/api/videos' , () =>{
-    return HttpResponse.json(
-        {id : 'vid-49', filename : 'tAlgae49.avi' , size_mb : 1800 ,  time_sec : 120},
-    )
-})
-
-const getVideoPreviewHandler = http.get('/api/videos/:id/preview' , ({params}) =>{
-    return HttpResponse.json(
-        {id:params.id , png : '' , cell_count : 42}
-    )
-})
+const getVideoPreviewHandler = http.get(
+  '/api/videos/:id/preview',
+  ({ params }) => {
+    return HttpResponse.json({ id: params.id, png: '', cell_count: 42 })
+  },
+)
 
 const startRunHandler = http.post('/api/runs', () => {
-  return HttpResponse.json({ id: 'run-queued', status: 'queued' }, { status: 202 })
+  return HttpResponse.json(
+    { id: 'run-queued', status: 'queued' },
+    { status: 202 },
+  )
 })
-
 
 const listRunsHandler = http.get('/api/runs', () => {
   return HttpResponse.json([
-    { id: 'run-completed', experiment_id: 'exp-49', status: 'completed', created_at: '2026-10-29T10:00:00' },
-    { id: 'run-error', experiment_id: 'exp-49', status: 'error', created_at: '2026-10-28T09:30:00' },
+    {
+      id: 'run-completed',
+      experiment_id: 'exp-49',
+      status: 'completed',
+      created_at: '2026-10-29T10:00:00',
+    },
+    {
+      id: 'run-error',
+      experiment_id: 'exp-49',
+      status: 'error',
+      created_at: '2026-10-28T09:30:00',
+    },
   ])
 })
-
 
 const getRunResultsHandler = http.get('/api/runs/:id/results', () => {
   return HttpResponse.json({
@@ -124,47 +145,52 @@ const getRunResultsHandler = http.get('/api/runs/:id/results', () => {
   })
 })
 
-
-const downloadResultCsvHandler = http.get('/api/runs/:id/results/:quantity.csv', () =>{
-    return HttpResponse.json(
-        {content : 'content'}
-    )
-})
+const downloadResultCsvHandler = http.get(
+  '/api/runs/:id/results/:quantity.csv',
+  () => {
+    return HttpResponse.json({ content: 'content' })
+  },
+)
 
 const plotItems = (id) => [
-  { name: 'theta_distribution', url: `/api/jobs/${id}/plots/theta_distribution.png`, error: null },
+  {
+    name: 'theta_distribution',
+    url: `/api/jobs/${id}/plots/theta_distribution.png`,
+    error: null,
+  },
   { name: 'flux', url: null, error: 'boom' },
-  { name: 'omega_distribution', url: `/api/jobs/${id}/plots/omega_distribution.png`, error: null },
+  {
+    name: 'omega_distribution',
+    url: `/api/jobs/${id}/plots/omega_distribution.png`,
+    error: null,
+  },
 ]
 // Cannot use id because MSW passes a params object to the function
-const listPlotsHandler = http.get('/api/jobs/:id/plots', ({params}) => {
+const listPlotsHandler = http.get('/api/jobs/:id/plots', ({ params }) => {
   return HttpResponse.json(plotItems(params.id))
 })
 
-
-const downloadPlotHandler = http.get('/api/jobs/:id/plots/:name.png', () =>{
+const downloadPlotHandler = http.get('/api/jobs/:id/plots/:name.png', () => {
   return new HttpResponse(new Uint8Array([137, 80, 78, 71]), {
-      headers: {'Content-Type': 'image/png'},
-    })
+    headers: { 'Content-Type': 'image/png' },
+  })
 })
 
-
 export const handlers = [
-    healthHandler,
-    loginHandler , 
-    getCurrentUserHandler , 
-    createExperimentHandler,
-    getExperimentHandler,
-    getDefaultParamsHandler,
-    getRunStatusHandler,
-    uploadIlluminationHandler,
-    uploadVideoHandler,
-    getVideoPreviewHandler,
-    startRunHandler,
-    listRunsHandler,
-    getRunResultsHandler,
-    downloadResultCsvHandler,
-    listPlotsHandler,
-    downloadPlotHandler,
+  healthHandler,
+  loginHandler,
+  getCurrentUserHandler,
+  createExperimentHandler,
+  getExperimentHandler,
+  getDefaultParamsHandler,
+  getRunStatusHandler,
+  uploadIlluminationHandler,
+  uploadVideoHandler,
+  getVideoPreviewHandler,
+  startRunHandler,
+  listRunsHandler,
+  getRunResultsHandler,
+  downloadResultCsvHandler,
+  listPlotsHandler,
+  downloadPlotHandler,
 ]
-

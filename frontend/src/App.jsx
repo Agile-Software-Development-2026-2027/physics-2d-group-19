@@ -7,7 +7,7 @@ import { ExperimentPage } from './pages/ExperimentPage/ExperimentPage.jsx'
 import { ResultsPage } from './pages/ResultsPage/ResultsPage.jsx'
 import { LoginPage } from './pages/LoginPage/LoginPage.jsx'
 import { ProcessingPage } from './pages/ProcessingPage/ProcessingPage.jsx'
-import {MainLayout} from './layouts/MainLayout/MainLayout.jsx'
+import { MainLayout } from './layouts/MainLayout/MainLayout.jsx'
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState('checking')
@@ -21,23 +21,19 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rotta pubblica: Login senza Header/Layout */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route element={<MainLayout backendStatus={backendStatus} />}>
+          {/* Rotta pubblica */}
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Rotte protette avvolte nel MainLayout */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <MainLayout backendStatus={backendStatus} />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/esperimento" element={<ExperimentPage />} />
-          <Route path="/elaborazione" element={<ProcessingPage />} />
-          <Route path="/risultati/:jobId" element={<ResultsPage />} />
+          {/* Rotte protette */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/esperimento" element={<ExperimentPage />} />
+            <Route path="/elaborazione" element={<ProcessingPage />} />
+            <Route path="/risultati/:jobId" element={<ResultsPage />} />
+          </Route>
         </Route>
 
-        {/* Redirect predefinito */}
+        {/* Redirect di default */}
         <Route path="*" element={<Navigate to="/elaborazione" replace />} />
       </Routes>
     </BrowserRouter>

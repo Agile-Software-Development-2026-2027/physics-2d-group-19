@@ -131,6 +131,32 @@ const downloadResultCsvHandler = http.get('/api/runs/:id/results/:quantity.csv',
     )
 })
 
+// job_id -> how many times its status was read
+const jobPolls = new Map()
+let lastJob = 0
+
+const createJobHandler = http.post('/api/jobs', async ({ request }) => {
+  const form = await request.formData()
+  if (!form.get('illumination'))
+    return HttpResponse.json({ detail: 'Illumination is required' }, { status: 422 })
+  const jobId = String(++lastJob).padStart(12, '0')
+  jobPolls.set(jobId, 0)
+  return HttpResponse.json({ job_id: jobId, status: 'queued' }, { status: 202 })
+})
+
+const getJobHandler = http.get('/api/jobs/:id', ({ params }) => {
+  if (!jobPolls.has(params.id))
+    return HttpResponse.json({ detail: 'Job not found' }, { status: 404 })
+  const polls = jobPolls.get(params.id)
+  jobPolls.set(params.id, polls + 1)
+  return HttpResponse.json({
+    job_id: params.id,
+    exp_id: 49,
+    status: polls === 0 ? 'analysis' : 'done',
+    error: null,
+  })
+})
+
 const plotItems = (id) => [
   { name: 'theta_distribution', url: `/api/jobs/${id}/plots/theta_distribution.png`, error: null },
   { name: 'flux', url: null, error: 'boom' },

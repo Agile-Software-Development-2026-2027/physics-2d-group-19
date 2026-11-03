@@ -6,6 +6,8 @@ import {
   getToken,
   setToken,
   getExperiment,
+  createJob,
+  getJob
 } from './client.js'
 
 afterEach(() => {
@@ -88,4 +90,29 @@ it('getExperiment fetches experiment by ID without sending a body', async () => 
   expect(spy.mock.calls[0][0]).toContain('/experiments/1')
   expect(spy.mock.calls[0][1]?.body).toBeUndefined()
   expect(result).toEqual(mockData)
+})
+
+it('createJob sends the files to /jobs with POST', async () => {
+  const spy = vi
+    .spyOn(globalThis, 'fetch')
+    .mockResolvedValue(new Response('{}', { status: 202 }))
+  const formData = new FormData()
+  formData.append('exp_id', '49')
+
+  await createJob(formData)
+
+  const [url, options] = spy.mock.calls[0]
+  expect(url).toContain('/jobs')
+  expect(options.method).toBe('POST')
+  expect(options.body).toBe(formData)
+})
+
+it('getJob fetches the job status by ID', async () => {
+  const spy = vi
+    .spyOn(globalThis, 'fetch')
+    .mockResolvedValue(new Response('{}', { status: 200 }))
+
+  await getJob('abc')
+
+  expect(spy.mock.calls[0][0]).toContain('/jobs/abc')
 })

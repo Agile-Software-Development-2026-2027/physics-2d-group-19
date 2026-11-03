@@ -45,7 +45,7 @@ export default function App() {
           }
         />
         <Route
-          path="/risultati"
+          path="/risultati/:jobId"
           element={
             <ProtectedRoute>
               <ResultsPage />

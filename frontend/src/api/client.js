@@ -135,13 +135,13 @@ export async function downloadElaborationResultCsv(id, grandezza) {
   link.remove()
   URL.revokeObjectURL(url)
 }
-
+// GET /api/jobs/{job_id}/plots/ -> list_plots (backend/app/api/plots.py)
 export async function getPlotsList(id) {
-  return await apiFetch(`/runs/${id}/plots`)
+  return await apiFetch(`/jobs/${id}/plots`)
 }
-
+// GET /api/jobs/{job_id}/plots/{filename}.png -> get_plot (backend/app/api/plots.py)
 export async function getPlotImageUrl(id, plotName) {
-  const res = await apiFetchRaw(`/runs/${id}/plots/${plotName}.png`)
+  const res = await apiFetchRaw(`/jobs/${id}/plots/${plotName}.png`)
 
   const imageBlob = await res.blob()
 

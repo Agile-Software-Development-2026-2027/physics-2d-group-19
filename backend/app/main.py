@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, experiments, health, history, jobs, params, preview, upload
+from app.api import auth, experiments, health, history, jobs, params, plots, preview, upload
 from app.api.deps import get_current_user
 from app.config import get_settings
 
@@ -32,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(preview.router, prefix="/api", dependencies=protected)
     app.include_router(params.router, prefix="/api", dependencies=protected)
     app.include_router(jobs.router, prefix="/api", dependencies=protected)
+    app.include_router(plots.router, prefix="/api", dependencies=protected)
     app.include_router(history.router, prefix="/api", dependencies=protected)
 
     return app

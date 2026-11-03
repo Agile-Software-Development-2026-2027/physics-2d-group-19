@@ -76,3 +76,27 @@ def test_cli_existing_user_exits_with_1(users_db, monkeypatch, capsys):
         main(["create", "operator"])
     assert exc_info.value.code == 1
     assert "already exists" in capsys.readouterr().err
+
+
+def test_password_never_stored_in_plain_text(tmp_path):
+    db = tmp_path / "users.db"
+    raw_password = "super-secret-password-12345"
+    create_user(db, "operator", raw_password)
+
+    stored_hash = get_password_hash(db, "operator")
+    assert stored_hash != raw_password
+    assert raw_password not in stored_hash
+    # Check that plain password byte sequence never appears inside the SQLite database file
+    assert raw_password.encode("utf-8") not in db.read_bytes()
+
+
+def test_duplicate_user_preserves_original_hash(tmp_path):
+    db = tmp_path / "users.db"
+    create_user(db, "operator", "initial-password")
+    original_hash = get_password_hash(db, "operator")
+
+    with pytest.raises(ValueError, match="already exists"):
+        create_user(db, "operator", "new-attempted-password")
+
+    # Verify that the original user's password hash remained intact
+    assert get_password_hash(db, "operator") == original_hash

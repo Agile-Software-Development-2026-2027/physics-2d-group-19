@@ -136,9 +136,6 @@ const jobPolls = new Map()
 let lastJob = 0
 
 const createJobHandler = http.post('/api/jobs', async ({ request }) => {
-  const form = await request.formData()
-  if (!form.get('illumination'))
-    return HttpResponse.json({ detail: 'Illumination is required' }, { status: 422 })
   const jobId = String(++lastJob).padStart(12, '0')
   jobPolls.set(jobId, 0)
   return HttpResponse.json({ job_id: jobId, status: 'queued' }, { status: 202 })
@@ -192,5 +189,7 @@ export const handlers = [
     downloadResultCsvHandler,
     listPlotsHandler,
     downloadPlotHandler,
+    createJobHandler,
+    getJobHandler
 ]
 

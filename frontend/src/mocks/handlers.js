@@ -135,7 +135,7 @@ const downloadResultCsvHandler = http.get('/api/runs/:id/results/:quantity.csv',
 const jobPolls = new Map()
 let lastJob = 0
 
-const createJobHandler = http.post('/api/jobs', async ({ request }) => {
+const createJobHandler = http.post('/api/jobs', () => {
   const jobId = String(++lastJob).padStart(12, '0')
   jobPolls.set(jobId, 0)
   return HttpResponse.json({ job_id: jobId, status: 'queued' }, { status: 202 })

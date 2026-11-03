@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getPlotImageUrl, getPlotsList } from '../api/client'
-import './ResultsPage.css'
+import { getPlotImageUrl, getPlotsList } from '../../api/client.js'
+import './ResultsPage.module.css'
 
 const TITLES = {
   theta_distribution: 'Distribuzione di θ',

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { getMe, getToken } from '../api/client'
-import { LogoutButton } from './LogoutButton'
+import { getMe, getToken } from '../../api/client.js'
+import { LogoutButton } from '../LogoutButton/LogoutButton.jsx'
 
 export function Header({ children }) {
   const location = useLocation()

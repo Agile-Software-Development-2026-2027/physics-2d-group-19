@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { describe, it, expect, beforeEach } from 'vitest'
-import { setToken } from '../api/client'
-import { server } from '../mocks/server'
-import { Header } from './Header'
+import { setToken } from '../../api/client.js'
+import { server } from '../../mocks/server.js'
+import { Header } from './Header.jsx'
 
 function renderHeader(path) {
   return render(

@@ -3,11 +3,11 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { useEffect, useState } from 'react'
 import { getHealth } from './api/client.js'
 
-import { ExperimentPage } from './pages/ExperimentPage.jsx'
-import { ResultsPage } from './pages/ResultsPage.jsx'
-import { LoginPage } from './pages/LoginPage.jsx'
-import { ProcessingPage } from './pages/ProcessingPage.jsx'
-import { Header } from './components/Header.jsx'
+import { ExperimentPage } from './pages/ExperimentPage/ExperimentPage.jsx'
+import { ResultsPage } from './pages/ResultsPage/ResultsPage.jsx'
+import { LoginPage } from './pages/LoginPage/LoginPage.jsx'
+import { ProcessingPage } from './pages/ProcessingPage/ProcessingPage.jsx'
+import {MainLayout} from './layouts/MainLayout/MainLayout.jsx'
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState('checking')
@@ -20,40 +20,24 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Header>
-        <span>Backend: {backendStatus}</span>
-      </Header>
       <Routes>
-        {/* Rotta pubblica */}
+        {/* Rotta pubblica: Login senza Header/Layout */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Rotte protette (US-7.4) */}
+        {/* Rotte protette avvolte nel MainLayout */}
         <Route
-          path="/esperimento"
           element={
             <ProtectedRoute>
-              <ExperimentPage />
+              <MainLayout backendStatus={backendStatus} />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/elaborazione"
-          element={
-            <ProtectedRoute>
-              <ProcessingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/risultati/:jobId"
-          element={
-            <ProtectedRoute>
-              <ResultsPage />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route path="/esperimento" element={<ExperimentPage />} />
+          <Route path="/elaborazione" element={<ProcessingPage />} />
+          <Route path="/risultati/:jobId" element={<ResultsPage />} />
+        </Route>
 
-        {/* Redirect predefinito se la rotta non esiste */}
+        {/* Redirect predefinito */}
         <Route path="*" element={<Navigate to="/elaborazione" replace />} />
       </Routes>
     </BrowserRouter>

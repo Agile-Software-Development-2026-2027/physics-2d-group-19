@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login } from '../api/client.js'
-import './LoginPage.css'
+import { login } from '../../api/client/client.js'
+import styles from './LoginPage.module.css'
 
 export function LoginPage() {
   const [username, setUsername] = useState('')
@@ -27,7 +27,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className='login-page'>
+    <div className={styles.loginPage}>
       <form onSubmit={handleSubmit}>
       <h1>Login</h1>
 

@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { ProtectedRoute } from './components/ProtectedRoute'
+import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute.jsx'
 import { useEffect, useState } from 'react'
-import { getHealth } from './api/client.js'
+import { getHealth } from './api/client/client.js'
 
-import { ExperimentPage } from './pages/ExperimentPage.jsx'
-import { ResultsPage } from './pages/ResultsPage.jsx'
-import { LoginPage } from './pages/LoginPage.jsx'
-import { ProcessingPage } from './pages/ProcessingPage.jsx'
-import { Header } from './components/Header.jsx'
+import { ExperimentPage } from './pages/ExperimentPage/ExperimentPage.jsx'
+import { ResultsPage } from './pages/ResultsPage/ResultsPage.jsx'
+import { LoginPage } from './pages/LoginPage/LoginPage.jsx'
+import { ProcessingPage } from './pages/ProcessingPage/ProcessingPage.jsx'
+import { Header } from './components/Header/Header.jsx'
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState('checking')

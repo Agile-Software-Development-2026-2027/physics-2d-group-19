@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { getToken } from '../api/client'
+import { getToken } from '../../api/client/client.js'
 
 export function ProtectedRoute({ children }) {
   const token = getToken()

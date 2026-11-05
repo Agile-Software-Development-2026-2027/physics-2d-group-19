@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createJob, getJob } from '../api/client'
-import './ProcessingPage.css'
+import { createJob, getJob } from '../../api/client/client.js'
+import styles from './ProcessingPage.module.css'
 
 // The phases written by the backend in status.json
 const PHASES = {
@@ -72,7 +72,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
   }, [jobId, pollMs, navigate])
 
   return (
-    <main className="processing-page">
+    <main className={styles.processingPage}>
       <h1>Elaborazione</h1>
       <label>
         Numero esperimento
@@ -113,7 +113,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
         />
       </label>
       {mainFile && !mainOk && (
-        <p className="processing-hint">Il file deve essere {mainExtension}</p>
+        <p className={styles.processingHint}>Il file deve essere {mainExtension}</p>
       )}
       <label>
         Illuminazione
@@ -124,7 +124,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
         />
       </label>
       {illumination && !illuminationOk && (
-        <p className="processing-hint">
+        <p className={styles.processingHint}>
           L'illuminazione deve essere .tif o .tiff
         </p>
       )}
@@ -136,10 +136,10 @@ export function ProcessingPage({ pollMs = 2000 }) {
         Avvia
       </button>
       {running && (
-        <p className="processing-phase">{PHASES[status] ?? status}</p>
+        <p className={styles.processingPhase}>{PHASES[status] ?? status}</p>
       )}
       {error && (
-        <p role="alert" className="processing-error">
+        <p role="alert" className={styles.processingError}>
           {error}
         </p>
       )}

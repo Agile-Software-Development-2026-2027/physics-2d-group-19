@@ -129,7 +129,7 @@
   height: 8px;
   border-radius: 50%;
   background: #3e8e4f;
-  animation: processing-pulse 1s ease-in-out infinite alternate;
+  animation: processingPulse 1s ease-in-out infinite alternate;
 }
 
 @keyframes processingPulse {

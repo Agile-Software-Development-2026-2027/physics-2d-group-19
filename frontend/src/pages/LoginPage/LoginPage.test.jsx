@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { http, HttpResponse, delay } from 'msw'
 import { beforeEach, expect, test } from 'vitest'
-import { server } from '../mocks/server'
+import { server } from '../../mocks/server.js'
 import { LoginPage } from './LoginPage.jsx'
 
 // The error message of the page for wrong credentials.

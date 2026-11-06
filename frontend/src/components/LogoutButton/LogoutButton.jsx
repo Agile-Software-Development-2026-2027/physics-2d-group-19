@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { clearToken } from '../api/client'
+import { clearToken } from '../../api/client/client.js'
 
 export function LogoutButton() {
   const navigate = useNavigate()

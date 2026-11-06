@@ -9,11 +9,9 @@ const healthHandler = http.get('/api/health',() => {
 const loginHandler  = http.post('/api/auth/login' , async ({ request }) => {
     const body = await request.json()
     if (body.username === 'operator' && body.password === 'secret')
-        return HttpResponse.json(
-        {access_token : 'jwt_token' , token_type : 'bearer'},
-        )
+        return HttpResponse.json({ token : 'jwt_token' })
     else
-        return HttpResponse.json({detail : 'Incorrect username or password'},{status:401})
+        return HttpResponse.json({ detail : 'Incorrect username or password' }, { status : 401 })
 })
 
 const getCurrentUserHandler = http.get('/api/auth/me' , () => {
@@ -133,17 +131,44 @@ const downloadResultCsvHandler = http.get('/api/runs/:id/results/:quantity.csv',
     )
 })
 
-const plotNames = ['theta', 'flux', 'angle', 'omega', 'nt', 'tumbling', 'density']
+// job_id -> how many times its status was read
+const jobPolls = new Map()
+let lastJob = 0
 
-const listPlotsHandler = http.get('/api/runs/:id/plots', () => {
-  return HttpResponse.json(plotNames)
+const createJobHandler = http.post('/api/jobs', () => {
+  const jobId = String(++lastJob).padStart(12, '0')
+  jobPolls.set(jobId, 0)
+  return HttpResponse.json({ job_id: jobId, status: 'queued' }, { status: 202 })
+})
+
+const getJobHandler = http.get('/api/jobs/:id', ({ params }) => {
+  if (!jobPolls.has(params.id))
+    return HttpResponse.json({ detail: 'Job not found' }, { status: 404 })
+  const polls = jobPolls.get(params.id)
+  jobPolls.set(params.id, polls + 1)
+  return HttpResponse.json({
+    job_id: params.id,
+    exp_id: 49,
+    status: polls === 0 ? 'analysis' : 'done',
+    error: null,
+  })
+})
+
+const plotItems = (id) => [
+  { name: 'theta_distribution', url: `/api/jobs/${id}/plots/theta_distribution.png`, error: null },
+  { name: 'flux', url: null, error: 'boom' },
+  { name: 'omega_distribution', url: `/api/jobs/${id}/plots/omega_distribution.png`, error: null },
+]
+// Cannot use id because MSW passes a params object to the function
+const listPlotsHandler = http.get('/api/jobs/:id/plots', ({params}) => {
+  return HttpResponse.json(plotItems(params.id))
 })
 
 
-const downloadPlotHandler = http.get('/api/runs/:id/plots/:name.png', () =>{
-    return HttpResponse.json(
-        {content : 'content'}
-    )
+const downloadPlotHandler = http.get('/api/jobs/:id/plots/:name.png', () =>{
+  return new HttpResponse(new Uint8Array([137, 80, 78, 71]), {
+      headers: {'Content-Type': 'image/png'},
+    })
 })
 
 
@@ -164,5 +189,7 @@ export const handlers = [
     downloadResultCsvHandler,
     listPlotsHandler,
     downloadPlotHandler,
+    createJobHandler,
+    getJobHandler
 ]
 

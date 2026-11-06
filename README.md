@@ -1,6 +1,46 @@
-# Project name
+# Moving Chlamydomonas
 
-One paragraph: what the project is.
+Web application for tracking and physical analysis of *Chlamydomonas* algae cells.
+
+## First setup and operator account
+
+Before using the application, initialize the virtual environment and create the first operator account from `backend/`:
+
+```bash
+cd backend
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python -m app.users create operator
+```
+
+The command prompts for the password twice without echoing it. Passwords are never stored in plain text and are hashed using Argon2id.
+
+To list existing operator accounts:
+
+```bash
+python -m app.users list
+```
+
+## Running the application
+In two separate terminals:
+
+1. Backend (port 8000):
+
+``` bash
+cd backend
+source .venv/bin/activate
+uvicorn app.main:app --reload
+```
+
+2. Frontend (port 5173):
+
+``` bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173 in your browser and log in with your operator credentials.
 
 ## How we work
 

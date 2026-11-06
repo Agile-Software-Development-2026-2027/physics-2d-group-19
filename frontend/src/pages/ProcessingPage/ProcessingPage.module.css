@@ -1,0 +1,159 @@
+/*
+    Processing page: a single column form inside a card.
+    Colours and spacing come from index.css; the green matches the login page.
+*/
+
+.processingPage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 480px;
+  margin: var(--space-3) auto;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.processingPage h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.processingPage fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
+.processingPage legend {
+  padding: 0 var(--space-1);
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.processingPage label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.processingPage fieldset label {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.processingPage input[type='radio'] {
+  accent-color: #3e8e4f;
+}
+
+.processingPage input[type='number'],
+.processingPage input[type='file'] {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: normal;
+}
+
+.processingPage input:focus-visible {
+  border-color: #3e8e4f;
+  outline: 3px solid rgba(62, 142, 79, 0.3);
+}
+
+.processingPage button {
+  margin-top: var(--space-2);
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: #12372a;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.processingPage button:hover {
+  background: #1e5a43;
+}
+
+.processingPage button:disabled {
+  background: #7d9488;
+  cursor: not-allowed;
+}
+
+.processingPage button:focus-visible {
+  outline: 3px solid #3e8e4f;
+  outline-offset: 2px;
+}
+
+/* Wrong file type, shown right under its field */
+.processingHint {
+  margin: calc(-1 * var(--space-1)) 0 0;
+  color: #a3361f;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.processingHint::before {
+  content: '⚠ ';
+}
+
+/* Current phase, with a pulsing dot while the job runs */
+.processingPhase {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.processingPhase::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3e8e4f;
+  animation: processingPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes processingPulse {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.processingError {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid #a3361f;
+  border-radius: var(--radius);
+  background: #fdf0ed;
+  color: #a3361f;
+}
+
+@media (max-width: 520px) {
+  .processingPage {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+  }
+}

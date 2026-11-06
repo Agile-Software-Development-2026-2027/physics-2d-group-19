@@ -1,3 +1,0 @@
-export function ResultsPage() {
-  return <div>Pagina dei risultati</div>
-}

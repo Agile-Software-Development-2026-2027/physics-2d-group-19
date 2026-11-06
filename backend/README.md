@@ -18,6 +18,25 @@ ruff check . && ruff format .   # lint and format
 The frontend dev server (`frontend/`, port 5173) proxies `/api` to this backend on port 8000.
 How to write tests and the team rules are in [`TESTING.md`](../TESTING.md).
 
+## Built frontend (single port)
+
+Run `npm ci` and `npm run build` from `frontend/`, then start the backend normally.
+Open http://localhost:8000. Keep `VITE_API_BASE_URL` unset or empty when building for
+the same origin, and `VITE_USE_MSW` disabled for real API calls.
+
+The backend looks for `frontend/dist` relative to the repository, independently of
+the working directory. It mounts the build after the API routes only when
+`index.html` is a file inside that directory. Missing or incomplete builds leave
+the API available and frontend URLs return 404. Build before starting the server;
+restart it after creating a previously missing build (handoff for task 22.2).
+
+Existing files are served by `StaticFiles`. GET/HEAD requests to extensionless
+paths (for example `/elaborazione` or `/risultati/<job_id>`) fall back to the index.
+Missing paths containing a dotted segment or under `/assets` return 404. `/api`
+and `/api/...` never fall back, and other HTTP methods never return the SPA index.
+API authentication, `/docs`, `/redoc` and `/openapi.json` retain their behavior.
+Tests can pass a temporary build using `create_app(frontend_dist=path)`.
+
 ## Users
 
 Create the first user from `backend/` (the password is asked twice and never shown):

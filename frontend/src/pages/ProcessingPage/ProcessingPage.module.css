@@ -3,7 +3,7 @@
     Colours and spacing come from index.css; the green matches the login page.
 */
 
-.processing-page {
+.processingPage {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -15,12 +15,12 @@
   background: var(--color-surface);
 }
 
-.processing-page h1 {
+.processingPage h1 {
   margin: 0;
   font-size: 1.5rem;
 }
 
-.processing-page fieldset {
+.processingPage fieldset {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
@@ -32,13 +32,13 @@
   background: var(--color-bg);
 }
 
-.processing-page legend {
+.processingPage legend {
   padding: 0 var(--space-1);
   font-size: 0.875rem;
   color: var(--color-muted);
 }
 
-.processing-page label {
+.processingPage label {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -46,7 +46,7 @@
   font-weight: 600;
 }
 
-.processing-page fieldset label {
+.processingPage fieldset label {
   flex-direction: row;
   align-items: center;
   gap: var(--space-2);
@@ -54,12 +54,12 @@
   cursor: pointer;
 }
 
-.processing-page input[type='radio'] {
+.processingPage input[type='radio'] {
   accent-color: #3e8e4f;
 }
 
-.processing-page input[type='number'],
-.processing-page input[type='file'] {
+.processingPage input[type='number'],
+.processingPage input[type='file'] {
   width: 100%;
   min-width: 0;
   padding: var(--space-2);
@@ -71,12 +71,12 @@
   font-weight: normal;
 }
 
-.processing-page input:focus-visible {
+.processingPage input:focus-visible {
   border-color: #3e8e4f;
   outline: 3px solid rgba(62, 142, 79, 0.3);
 }
 
-.processing-page button {
+.processingPage button {
   margin-top: var(--space-2);
   padding: 12px;
   border: none;
@@ -88,34 +88,34 @@
   cursor: pointer;
 }
 
-.processing-page button:hover {
+.processingPage button:hover {
   background: #1e5a43;
 }
 
-.processing-page button:disabled {
+.processingPage button:disabled {
   background: #7d9488;
   cursor: not-allowed;
 }
 
-.processing-page button:focus-visible {
+.processingPage button:focus-visible {
   outline: 3px solid #3e8e4f;
   outline-offset: 2px;
 }
 
 /* Wrong file type, shown right under its field */
-.processing-hint {
+.processingHint {
   margin: calc(-1 * var(--space-1)) 0 0;
   color: #a3361f;
   font-size: 0.875rem;
   font-weight: 600;
 }
 
-.processing-hint::before {
+.processingHint::before {
   content: '⚠ ';
 }
 
 /* Current phase, with a pulsing dot while the job runs */
-.processing-phase {
+.processingPhase {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -123,16 +123,16 @@
   color: var(--color-muted);
 }
 
-.processing-phase::before {
+.processingPhase::before {
   content: '';
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #3e8e4f;
-  animation: processing-pulse 1s ease-in-out infinite alternate;
+  animation: processingPulse 1s ease-in-out infinite alternate;
 }
 
-@keyframes processing-pulse {
+@keyframes processingPulse {
   from {
     opacity: 0.3;
   }
@@ -141,7 +141,7 @@
   }
 }
 
-.processing-error {
+.processingError {
   margin: 0;
   padding: var(--space-2) var(--space-3);
   border: 1px solid #a3361f;
@@ -151,7 +151,7 @@
 }
 
 @media (max-width: 520px) {
-  .processing-page {
+  .processingPage {
     margin: 0;
     border: none;
     border-radius: 0;

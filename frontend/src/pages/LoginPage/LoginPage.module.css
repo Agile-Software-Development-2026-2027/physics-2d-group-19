@@ -2,7 +2,7 @@
    green algae cells under a radial light, like in the experiments.
    Only CSS, no images. */
 
-.login-page {
+.loginPage {
   position: relative;
   overflow: hidden;
   min-height: 100vh;
@@ -17,7 +17,7 @@
 
 
 
-.login-page form {
+.loginPage form {
   position: relative;
   z-index: 1;
   display: flex;
@@ -27,7 +27,7 @@
   max-width: 320px;
 }
 
-.login-page h1 {
+.loginPage h1 {
   margin: 0 0 6px;
   font-family: Charter, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   font-size: 46px;
@@ -35,7 +35,7 @@
   line-height: 1.1;
 }
 
-.login-page label {
+.loginPage label {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -43,7 +43,7 @@
   font-weight: 600;
 }
 
-.login-page input {
+.loginPage input {
   padding: 11px 12px;
   border: 1px solid #9db3a4;
   border-radius: 6px;
@@ -53,13 +53,13 @@
   font-size: 15px;
 }
 
-.login-page input:focus {
+.loginPage input:focus {
   border-color: #3e8e4f;
   outline: 3px solid rgba(62, 142, 79, 0.3);
 }
 
 /* Error message: it keeps its space, so the page does not jump */
-.login-page p {
+.loginPage p {
   min-height: 20px;
   margin: 0;
   color: #a3361f;
@@ -67,7 +67,7 @@
   font-weight: 600;
 }
 
-.login-page button {
+.loginPage button {
   padding: 12px;
   border: none;
   border-radius: 6px;
@@ -79,28 +79,28 @@
   cursor: pointer;
 }
 
-.login-page button:hover {
+.loginPage button:hover {
   background: #1e5a43;
 }
 
-.login-page button:disabled {
+.loginPage button:disabled {
   background: #7d9488;
   cursor: wait;
 }
 
-.login-page button:focus-visible {
+.loginPage button:focus-visible {
   outline: 3px solid #3e8e4f;
   outline-offset: 2px;
 }
 
 /* Small screens: only the form, the field of view is hidden */
 @media (max-width: 800px) {
-  .login-page {
+  .loginPage {
     padding: 0 24px;
   }
 
-  .login-page::before,
-  .login-page::after {
+  .loginPage::before,
+  .loginPage::after {
     display: none;
   }
 }

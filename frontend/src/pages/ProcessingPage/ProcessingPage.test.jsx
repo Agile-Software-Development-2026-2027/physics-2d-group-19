@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { http, HttpResponse } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
-import { server } from '../mocks/server'
+import { server } from '../../mocks/server.js'
 import { ProcessingPage } from './ProcessingPage.jsx'
 
 // Put back the real fetch after the tests that replace it with a spy

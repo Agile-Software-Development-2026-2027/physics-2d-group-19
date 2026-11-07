@@ -7,6 +7,7 @@ def test_settings_copies_file(tmp_path):
     assert path.exists()
     assert path.read_bytes() == store.RESOURCE_SETTINGS.read_bytes()
 
+
 def test_get_experiment_49(tmp_path):
     experiment = store.get_experiment(tmp_path, 49)
     assert experiment.exps == 49
@@ -14,8 +15,10 @@ def test_get_experiment_49(tmp_path):
 
 def test_get_experiment_missing(tmp_path):
     import pytest
+
     with pytest.raises(KeyError):
         store.get_experiment(tmp_path, 9999)
+
 
 def test_save_new_experiment(tmp_path):
     experiment = store.get_experiment(tmp_path, 49)

@@ -6,15 +6,16 @@ from app.services.experiment_settings import ExperimentSettings, to_settings_lin
 RESOURCE_SETTINGS = Path(__file__).parent.parent / "resources" / "talgae_settings.txt"
 
 
-def settings_path(data_dir : Path ) -> Path : 
+def settings_path(data_dir: Path) -> Path:
     path = data_dir / "experiments" / "talgae_settings.txt"
 
     if not path.exists():
-        path.parent.mkdir(parents=True , exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
         contenuto = RESOURCE_SETTINGS.read_bytes()
         path.write_bytes(contenuto)
 
-    return path 
+    return path
+
 
 def experiment_row(row: str) -> ExperimentSettings | None:
     row = row.strip()
@@ -44,29 +45,32 @@ def experiment_row(row: str) -> ExperimentSettings | None:
         fluo=int(pieces[7]),
         lin=int(pieces[8]),
         axis=int(pieces[9]),
-        )  
+    )
 
-def list_experiments(data_dir : Path) -> list[ExperimentSettings] :
+
+def list_experiments(data_dir: Path) -> list[ExperimentSettings]:
 
     path = settings_path(data_dir)
     experiment = []
 
-    with open(path  , encoding="utf-8") as file : 
-        for row in file : 
+    with open(path, encoding="utf-8") as file:
+        for row in file:
             exp = experiment_row(row)
-            if exp is not None : 
+            if exp is not None:
                 experiment.append(exp)
-    return experiment 
+    return experiment
 
-def get_experiment(data_dir : Path , exp_id : int) -> ExperimentSettings : 
+
+def get_experiment(data_dir: Path, exp_id: int) -> ExperimentSettings:
 
     all = list_experiments(data_dir)
 
-    for experiment in all : 
-        if experiment.exps == exp_id : 
+    for experiment in all:
+        if experiment.exps == exp_id:
             return experiment
 
     raise KeyError(exp_id)
+
 
 def save_experiment(data_dir: Path, settings: ExperimentSettings) -> None:
     path = settings_path(data_dir)

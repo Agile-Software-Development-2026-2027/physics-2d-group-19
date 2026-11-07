@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100..900&display=swap');
-
 @font-face {
   font-family: 'Sponge Lump';
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+}
+@font-face {
+    font-family: "Roboto Slab";
+    font-style: normal;
 }
 
 :root {

@@ -1,5 +1,13 @@
+import pytest
+
 from app.config import get_settings
+from app.security import create_access_token
 from app.services.experiments_store import settings_path
+
+
+@pytest.fixture
+def auth_headers():
+    return {"Authorization": f"Bearer {create_access_token('operator')}"}
 
 
 def test_get_experiment_49(client, auth_headers):

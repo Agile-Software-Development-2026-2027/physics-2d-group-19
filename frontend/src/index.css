@@ -1,62 +1,59 @@
-/* Colori e misure condivisi da tutta l'app */
-:root {
-  --color-bg: #ffffff;
-  --color-text: #1f2328;
-  --color-muted: #59636e;
-  --color-border: #d1d9e0;
-  --color-surface: #f6f8fa;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 16px;
-  --radius: 6px;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  color: var(--color-text);
-  background: var(--color-bg);
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100..900&display=swap');
+
+@font-face {
+  font-family: 'Sponge Lump';
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+:root {
+  --color-alga: #2e7d32;
+  --color-alga-hover: #1b5e20;
+  --color-alga-light: #e8f5e9;
+
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-header: #f1f5f9;
+}
+
+.dark {
+  --color-alga: #4caf50;
+  --color-alga-hover: #66bb6a;
+  --color-alga-light: #1b381e;
+
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-text: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-border: #334155;
+  --color-header: #1e293b;
+}
+
+@theme {
+  --font-sponge: 'Sponge Lump', sans-serif;
+  --font-roboto: 'Roboto Slab', serif;
+
+  --color-alga: var(--color-alga);
+  --color-alga-hover: var(--color-alga-hover);
+  --color-alga-light: var(--color-alga-light);
+
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-header: var(--color-header);
 }
 
 body {
-  margin: 0;
-}
-
-/* Header: stato del backend a sinistra, utente e «Esci» a destra */
-.site-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.header-status {
-  font-size: 0.875rem;
-  color: var(--color-muted);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-left: auto;
-}
-
-.header-actions button {
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-bg);
+  background-color: var(--color-bg);
   color: var(--color-text);
-  font: inherit;
-  cursor: pointer;
-}
-
-.header-actions button:hover {
-  background: var(--color-surface);
+  font-family: var(--font-roboto);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }

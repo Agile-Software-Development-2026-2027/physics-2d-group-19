@@ -3,11 +3,10 @@ import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute.jsx'
 import { useEffect, useState } from 'react'
 import { getHealth } from './api/client/client.js'
 
-import { ExperimentPage } from './pages/ExperimentPage/ExperimentPage.jsx'
-import { ResultsPage } from './pages/ResultsPage/ResultsPage.jsx'
 import { LoginPage } from './pages/LoginPage/LoginPage.jsx'
 import { ProcessingPage } from './pages/ProcessingPage/ProcessingPage.jsx'
-import { Header } from './components/Header/Header.jsx'
+import { MainLayout } from './layouts/MainLayout.jsx'
+import { ExperimentPage } from './pages/ExperimentPage/ExperimentPage.jsx'
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState('checking')
@@ -20,41 +19,18 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Header>
-        <span>Backend: {backendStatus}</span>
-      </Header>
       <Routes>
-        {/* Rotta pubblica */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route element={<MainLayout backendStatus={backendStatus} />}>
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Rotte protette (US-7.4) */}
-        <Route
-          path="/esperimento"
-          element={
-            <ProtectedRoute>
-              <ExperimentPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/elaborazione"
-          element={
-            <ProtectedRoute>
-              <ProcessingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/risultati/:jobId"
-          element={
-            <ProtectedRoute>
-              <ResultsPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/processing" element={<ProcessingPage />} />
+            <Route path="/elaboration" element={<ExperimentPage/>} />
+          </Route>
+        </Route>
 
-        {/* Redirect predefinito se la rotta non esiste */}
-        <Route path="*" element={<Navigate to="/elaborazione" replace />} />
+        {/* Redirect di fallback all'unica pagina */}
+        <Route path="*" element={<Navigate to="/processing" replace />} />
       </Routes>
     </BrowserRouter>
   )

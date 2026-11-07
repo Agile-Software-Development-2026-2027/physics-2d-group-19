@@ -1,14 +1,12 @@
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 import { getToken } from '../../api/client/client.js'
 
 export function ProtectedRoute({ children }) {
-  const token = getToken()
-  const location = useLocation()
+  const isLoggedIn = Boolean(getToken())
 
-  // Se l'utente non ha un token valido, reindirizza al login salvando la pagina di provenienza
-  if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />
   }
 
-  return children
+  return children ? children : <Outlet />
 }

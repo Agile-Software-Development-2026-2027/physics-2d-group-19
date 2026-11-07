@@ -19,7 +19,7 @@ def read_experiment(exp_id: int) -> ExperimentSettings:
     try:
         return get_experiment(data_dir, exp_id)
     except KeyError:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise HTTPException(status_code=404, detail="Experiment not found") from None
 
 
 @router.put("/{exp_id}")

@@ -1,7 +1,7 @@
-from pathlib import Path 
-import os 
+import os
+from pathlib import Path
 
-from app.services.experiment_settings import ExperimentSettings , to_settings_line
+from app.services.experiment_settings import ExperimentSettings, to_settings_line
 
 RESOURCE_SETTINGS = Path(__file__).parent.parent / "resources" / "talgae_settings.txt"
 
@@ -51,7 +51,7 @@ def list_experiments(data_dir : Path) -> list[ExperimentSettings] :
     path = settings_path(data_dir)
     experiment = []
 
-    with open(path , "r" , encoding="utf-8") as file : 
+    with open(path  , encoding="utf-8") as file : 
         for row in file : 
             exp = experiment_row(row)
             if exp is not None : 

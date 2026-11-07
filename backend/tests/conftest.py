@@ -14,6 +14,6 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("APP_DATA_DIR", str(tmp_path))
     get_settings.cache_clear()
-    with TestClient(create_app()) as c:
+    with TestClient(create_app(frontend_dist=tmp_path / "no-build")) as c:
         yield c
     get_settings.cache_clear()

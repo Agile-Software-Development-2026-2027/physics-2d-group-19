@@ -37,8 +37,8 @@ export function Header({ children, backendStatus }) {
 
         {/* Centro: Titolo */}
         <div className="absolute left-1/2 -translate-x-1/2 text-center">
-          <h1 className="text-4xl md:text-5xl font-sponge text-text">
-            tAlgae<span className="text-alga">Lab</span>
+          <h1 className="font-faster text-text">
+            <span className="text-5xl">M</span><span className="text-alga text-4xl font-sponge">chlamydomonas</span>
           </h1>
         </div>
 
@@ -47,12 +47,13 @@ export function Header({ children, backendStatus }) {
           {isLoggedIn && (
             <>
               {username && (
-                <span className="text-xs font-semibold text-text border border-border px-3 py-1.5 rounded-full">
+                <span className="inline-flex items-center gap-2 text-xs font-semibold text-text border border-border px-3 py-1.5 rounded-full shadow-2xs">
+                  <i className="fa-regular fa-user text-alga"></i>
                   {username}
                 </span>
               )}
-              <LogoutButton />
-            </>
+          <LogoutButton />
+        </>
           )}
         </div>
       </div>

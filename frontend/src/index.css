@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@fortawesome/fontawesome-free/css/all.min.css";
 
 @font-face {
   font-family: 'Sponge Lump';
@@ -11,8 +12,15 @@
     font-style: normal;
 }
 
+@font-face {
+  font-family: "Faster One";
+  font-weight: 400;
+  font-style: normal;
+}
+
+
 :root {
-  --color-alga: #2e7d32;
+  --color-alga: #658A2A;
   --color-alga-hover: #1b5e20;
   --color-alga-light: #e8f5e9;
 
@@ -40,6 +48,7 @@
 @theme {
   --font-sponge: 'Sponge Lump', sans-serif;
   --font-roboto: 'Roboto Slab', serif;
+  --font-faster: 'Faster One', sans-serif;
 
   --color-alga: var(--color-alga);
   --color-alga-hover: var(--color-alga-hover);

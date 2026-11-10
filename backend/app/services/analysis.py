@@ -3,13 +3,23 @@
 from pathlib import Path
 
 from app.resources import ANALYSIS_PARAMS, FILTER_PARAMS
-from core.clam_pipeline.analyze import AnalysisOutputs, analyze_experiment
+from core.clam_pipeline.analyze import (
+    AnalysisOutputs,
+    AnalysisParams,
+    FilterParams,
+    analyze_experiment,
+)
 from core.clam_pipeline.io import load_settings, load_trajectories_txt
 
 
 # Run core physical analysis on experiment trajectories.
 def run_analysis(
-    exp_id: int, settings_txt: Path, traj_txt: Path, illum_dir: Path
+    exp_id: int,
+    settings_txt: Path,
+    traj_txt: Path,
+    illum_dir: Path,
+    params: AnalysisParams | None = None,
+    fparams: FilterParams | None = None,
 ) -> AnalysisOutputs:
 
     settings_df = load_settings(settings_txt)
@@ -34,6 +44,10 @@ def run_analysis(
     # Set dummy radial directory since radial_map=False skips disk reading
     radial_dir = illum_dir / "_no_radial_map"
 
+    # Fall back to laboratory default parameters if custom ones are not provided
+    active_params = params if params is not None else ANALYSIS_PARAMS
+    active_fparams = fparams if fparams is not None else FILTER_PARAMS
+
     # Invoke the core pipeline and return physical computation metric tables
     return analyze_experiment(
         exp_id=exp_id,
@@ -41,6 +55,6 @@ def run_analysis(
         traj_df=traj_df,
         illum_dir=illum_dir,
         radial_dir=radial_dir,
-        params=ANALYSIS_PARAMS,
-        fparams=FILTER_PARAMS,
+        params=active_params,
+        fparams=active_fparams,
     )

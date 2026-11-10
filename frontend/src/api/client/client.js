@@ -63,7 +63,7 @@ export async function getExperiment(id) {
 
 export async function uploadIllumination(id, imgFile) {
   const formData = new FormData()
-  formData.append('img', imgFile)
+  formData.append('file', imgFile)
 
   const data = await apiFetch(`/experiments/${id}/illumination`, {
     method: 'POST',

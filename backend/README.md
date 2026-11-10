@@ -101,3 +101,5 @@ core maps zero to `illumination1.tiff`; resolving that discrepancy belongs to jo
 integration, and zero is not yet usable end to end through the canonical file alone.
 For 20.3, use this directory when the job has no illumination attached. For 16.4, call the
 endpoint after saving the experiment and show the returned filename; the form is separate.
+
+

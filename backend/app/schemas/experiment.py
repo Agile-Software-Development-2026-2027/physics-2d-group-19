@@ -34,3 +34,10 @@ class ExperimentSettings(BaseModel):
     lin: Literal[0, 1] = Field(0, description="Linear illumination : 0=no , 1=yes")
 
     axis: Literal[0, 1] = Field(0, description="Axis of the linear gradient : 0=x , 1=y")
+
+
+class IlluminationUploadResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ill: int = Field(ge=0, description="Experiment's illumination image number")
+    filename: str = Field(description="Canonical filename, e.g. illumination14.tiff")

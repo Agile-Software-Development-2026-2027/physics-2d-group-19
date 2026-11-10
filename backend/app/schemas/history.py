@@ -15,4 +15,3 @@ class HistoryItem(BaseModel):
     status: JobStatus = Field(description="Execution status")
     created_at: datetime | str = Field(description="Timestamp when the job was created")
     video: str | None = Field(default=None, description="Original video filename if available")
-

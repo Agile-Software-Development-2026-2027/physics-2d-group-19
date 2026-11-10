@@ -104,4 +104,3 @@ def test_history_item():
     assert item.exp_id == 49
     assert item.status == JobStatus.DONE
     assert item.video == "tAlgae49.avi"
-

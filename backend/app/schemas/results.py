@@ -8,4 +8,3 @@ class ResultFileItem(BaseModel):
 
     name: str = Field(description="Name of the physical metric, e.g. theta, flux, omega")
     url: str = Field(description="Download URL endpoint for the CSV file")
-

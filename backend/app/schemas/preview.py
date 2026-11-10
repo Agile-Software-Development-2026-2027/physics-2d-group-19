@@ -11,4 +11,3 @@ class PreviewResponse(BaseModel):
     image: str = Field(
         description="Base64 encoded data URL (e.g. data:image/png;base64,...)",
     )
-

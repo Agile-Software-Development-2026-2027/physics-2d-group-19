@@ -11,4 +11,3 @@ class VideoUploadResponse(BaseModel):
     size_bytes: int = Field(ge=0, description="Size of the uploaded video in bytes")
     frames: int = Field(ge=0, description="Total number of frames in the video")
     fps: float = Field(gt=0.0, description="Frames per second of the video")
-

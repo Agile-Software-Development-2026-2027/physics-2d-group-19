@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createJob, getJob } from '../../api/client/client.js'
-import { parseExperimentIds } from '../../utility/splitExperimentID.js'
 
 const PHASES = {
   queued: 'In coda',
@@ -10,19 +9,19 @@ const PHASES = {
   plots: 'Creazione dei grafici',
 }
 
-const AVAILABLE_EXPERIMENTS = [
+{/*const AVAILABLE_EXPERIMENTS = [
   { id: '49', name: 'exp_049_algae_tracking', date: '01 Nov 2026' },
   { id: '50', name: 'exp_050_fluorescence_test', date: '03 Nov 2026' },
   { id: '51', name: 'exp_051_photonics_run', date: '05 Nov 2026' },
   { id: '52', name: 'exp_052_lightfield_scan', date: '08 Nov 2026' },
   { id: '53', name: 'exp_053_high_density', date: '09 Nov 2026' },
-]
+]*/}
 
 
 export function ProcessingPage({ pollMs = 2000 }) {
   const navigate = useNavigate()
   const [experiment, setExperiment] = useState('')
-  const [isFolderOpen, setIsFolderOpen] = useState(false)
+  //const [isFolderOpen, setIsFolderOpen] = useState(false)
 
   const [kindDataInput, setKindDataInput] = useState('trajectories')
   const [kindMachine, setKindMachine] = useState('microscope2d')
@@ -46,7 +45,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
   const running = status !== null && status !== 'done' && status !== 'error'
 
   // Calcola in tempo reale la lista degli ID risolti (inclusi i range)
-  const parsedExpIds = parseExperimentIds(experiment)
+  //const parsedExpIds = parseExperimentIds(experiment)
 
   const mainExtension = kindDataInput === 'video' ? '.avi' : '.txt'
   const mainOk = mainFile?.name.toLowerCase().endsWith(mainExtension)
@@ -56,13 +55,14 @@ export function ProcessingPage({ pollMs = 2000 }) {
   const settingsOk = settingsName.endsWith('.txt')
 
   // Aggiunge o rimuove un ID dalla selezione
-  function toggleExperiment(id) {
+  /*function toggleExperiment(id) {
     const updated = parsedExpIds.includes(id)
       ? parsedExpIds.filter((item) => item !== id)
       : [...parsedExpIds, id]
 
     setExperiment(updated.join(', '))
-  }
+  }*/
+
   // Aumenta o Diminuisci i valori dei parametri
   function updateParam(key, value) {
     setAnalysisParams((prev) => ({
@@ -76,7 +76,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
     setStatus('queued')
     const formData = new FormData()
 
-    formData.append('exp_id', parsedExpIds.join(','))
+    formData.append('exp_id', experiment.trim())
     formData.append('machine', kindMachine)
     formData.append(kindDataInput, mainFile)
     formData.append('illumination', illumination)
@@ -188,7 +188,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
 
         {/* 3. CAMPO NUMERO ESPERIMENTO CON SUPPORTO RANGE + CARTELLA */}
         <div className="relative space-y-2">
-          <div className="flex justify-between items-center">
+          {/*<div className="flex justify-between items-center">
             <label htmlFor="experiment-input" className="text-sm font-semibold text-text">
               ID esperimenti
             </label>
@@ -201,12 +201,12 @@ export function ProcessingPage({ pollMs = 2000 }) {
               <i className="fa-regular fa-folder-open"></i>
               {isFolderOpen ? 'Chiudi cartella' : 'Sfoglia cartella esperimenti'}
             </button>
-          </div>
+          </div>*/}
 
           <input
             id="experiment-input"
             type="text"
-            placeholder="Es. 49,50... o anché un range di esperimenti 49-60"
+            placeholder="Es. 49"
             value={experiment}
             onChange={(e) => setExperiment(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg text-text font-normal focus:outline-none focus:ring-2 focus:ring-alga/50 focus:border-alga transition-all"
@@ -217,7 +217,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
           </p>*/}
 
           {/* Tag con gli ID espansi in tempo reale */}
-          {parsedExpIds.length > 0 && (
+          {/*{parsedExpIds.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               <span className="text-xs text-text-muted self-center mr-1">Trovati ({parsedExpIds.length}):</span>
               {parsedExpIds.map((id) => (
@@ -236,10 +236,10 @@ export function ProcessingPage({ pollMs = 2000 }) {
                 </span>
               ))}
             </div>
-          )}
+          )}*/}
 
           {/* TENDINA CARTELLA DROPDOWN */}
-          {isFolderOpen && (
+          {/*{isFolderOpen && (
             <div className="absolute z-10 w-full mt-1 p-3 bg-surface border border-border rounded-xl shadow-lg space-y-2 text-left">
               <div className="flex justify-between items-center pb-2 border-b border-border text-xs text-text-muted">
                 <span>Percorso: <code className="font-mono bg-bg px-1 rounded">/data/esperimenti/</code></span>
@@ -271,7 +271,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
                 })}
               </div>
             </div>
-          )}
+          )}*/}
         </div>
 
         {/* 4. FILE CARICATI & SUBMIT */}

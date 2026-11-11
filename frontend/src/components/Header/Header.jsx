@@ -38,7 +38,7 @@ export function Header({ children, backendStatus }) {
         {/* Centro: Titolo */}
         <div className="absolute left-1/2 -translate-x-1/2 text-center">
           <h1 className="font-faster text-text">
-            <span className="text-5xl">M</span><span className="text-alga text-4xl font-sponge">chlamydomonas</span>
+            <span className="font-sponge text-black text-5xl">Mov</span><span className="text-alga text-4xl font-sponge">chlamydomonas</span>
           </h1>
         </div>
 

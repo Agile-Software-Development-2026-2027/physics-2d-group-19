@@ -6,6 +6,8 @@ node_modules/
 dist/
 *.mp4
 *.avi
+# The only video in the repository: the 17 MB clip of experiment 49 for the tests
+!backend/tests/fixtures/exp49/clip/tAlgae49_clip.avi
 *.zip
 .env
 docs/

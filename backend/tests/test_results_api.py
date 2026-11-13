@@ -3,7 +3,6 @@ import pytest
 from app.api.deps import get_current_user
 from app.config import get_settings
 from app.services.jobs_store import create_job, job_dir, write_status
-from app.services.results import RESULT_NAMES
 
 
 @pytest.fixture
@@ -21,15 +20,14 @@ def finished_job(auth_client):
     return job_id
 
 
-def test_list_has_one_item_per_result(auth_client, finished_job):
+def test_list_has_only_the_existing_csv(auth_client, finished_job):
     response = auth_client.get(f"/api/jobs/{finished_job}/results")
 
     assert response.status_code == 200
-    items = {item["name"]: item for item in response.json()}
-    assert list(items) == list(RESULT_NAMES)
-    assert items["omega"]["url"] == f"/api/jobs/{finished_job}/results/omega.csv"
-    # only omega.csv was written, so the other results have no url
-    assert items["flux"]["url"] is None
+    # only omega.csv was written, so it is the only item
+    assert response.json() == [
+        {"name": "omega", "url": f"/api/jobs/{finished_job}/results/omega.csv"},
+    ]
 
 
 def test_list_of_running_job_is_409(auth_client):

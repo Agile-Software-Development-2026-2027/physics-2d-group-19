@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
 from app.config import get_settings
+from app.schemas import ResultFileItem
 from app.services.jobs_store import job_dir, read_status
 from app.services.results import RESULT_NAMES
 
@@ -9,7 +10,7 @@ router = APIRouter(prefix="/jobs", tags=["results"])
 
 
 @router.get("/{job_id}/results")
-def list_results(job_id: str) -> list[dict[str, str | None]]:
+def list_results(job_id: str) -> list[ResultFileItem]:
     data_dir = get_settings().data_dir
     try:
         status = read_status(data_dir, job_id)
@@ -22,10 +23,11 @@ def list_results(job_id: str) -> list[dict[str, str | None]]:
     results_dir = job_dir(data_dir, job_id) / "results"
     items = []
 
+    # Only the CSVs that exist on disk (ResultFileItem.url can't be None).
     for name in RESULT_NAMES:
-        exists = (results_dir / f"{name}.csv").is_file()
-        url = f"/api/jobs/{job_id}/results/{name}.csv" if exists else None
-        items.append({"name": name, "url": url})
+        if (results_dir / f"{name}.csv").is_file():
+            url = f"/api/jobs/{job_id}/results/{name}.csv"
+            items.append(ResultFileItem(name=name, url=url))
     return items
 
 

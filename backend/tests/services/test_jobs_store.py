@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import datetime
 from uuid import UUID
 
 import pytest
@@ -24,7 +25,10 @@ def test_create_job_has_isolated_folders_and_initial_status(tmp_path):
         (directory / name).is_dir()
         for name in ("input", "parameters", "tracking", "results", "plots")
     )
-    assert store.read_status(tmp_path, job_id) == {
+    status = store.read_status(tmp_path, job_id)
+    created_at = datetime.fromisoformat(status.pop("created_at"))
+    assert created_at.tzinfo is not None
+    assert status == {
         "job_id": job_id,
         "exp_id": 49,
         "status": "queued",
@@ -47,6 +51,7 @@ def test_updates_preserve_metadata_and_clear_error(tmp_path):
     expected = {
         "job_id": job_id,
         "exp_id": 49,
+        "created_at": store.read_status(tmp_path, job_id)["created_at"],
         "status": "done",
         "error": None,
         "progress": 2,

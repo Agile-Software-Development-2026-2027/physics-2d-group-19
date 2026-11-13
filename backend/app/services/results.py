@@ -97,3 +97,60 @@ def save_legacy_txt(
         saved_paths.append(out_path)
 
     return saved_paths
+
+def save_csv(
+    outputs: AnalysisOutputs,
+    results_dir: Path
+) -> list[Path]:
+
+    results_dir.mkdir(parents=True, exist_ok=True)
+    files_to_save = [
+        (   outputs.nt_stats,
+            results_dir / f"Nt_stats.csv"
+        ),
+        (
+            outputs.flux,
+            results_dir / f"Flux.csv"
+        ),
+        (
+            outputs.theta,
+            results_dir / f"Theta.csv"
+        ),
+        (
+            outputs.theta_y,
+            results_dir / f"ThetaY.csv"
+        ),
+        (
+            outputs.theta_y_axis0,
+            results_dir / f"ThetaY_axis0.csv"
+        ),
+        (
+            outputs.theta_y_axis1,
+            results_dir / f"ThetaY_axis1.csv"
+        ),
+        (
+            outputs.angle,
+            results_dir / f"angle.csv"
+        ),
+        (
+            outputs.omega,
+            results_dir / f"omega.csv"
+        ),
+        (
+            outputs.tumbling_orientation,
+            results_dir / f"tumb.csv"
+        ),
+        (
+            outputs.tumbling_duration,
+            results_dir / f"tumb_dur.csv"
+        ),
+    ]
+
+    saved_file :list[Path] = []
+    float_fmt : str = "%.6f"
+
+    for df ,out_path in files_to_save:
+        df.to_csv(out_path, index=False, float_format=float_fmt)
+        saved_file.append(out_path)
+
+    return saved_file

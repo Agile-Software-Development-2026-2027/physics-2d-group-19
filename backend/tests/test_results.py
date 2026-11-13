@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from app.services.results import save_legacy_txt
+from app.services.results import RESULT_NAMES, save_csv, save_legacy_txt
 from core.clam_pipeline.analyze import AnalysisParams, FilterParams, analyze_experiment
 from core.clam_pipeline.io import load_settings, load_trajectories_txt
 
@@ -63,6 +63,7 @@ def exp49_results_dir(tmp_path_factory):
     )
 
     save_legacy_txt(outputs, d, 49, ANALYSIS_PARAMS)
+    save_csv(outputs, d)
     return d
 
 
@@ -80,3 +81,15 @@ def test_flux_same_as_reference(exp49_results_dir):
     )
     expected_flux = gzip.decompress(ref.read_bytes()).replace(b"\r\n", b"\n")
     assert generated_flux == expected_flux
+
+
+def test_save_csv_writes_one_file_per_result(exp49_results_dir):
+    for name in RESULT_NAMES:
+        assert (exp49_results_dir / f"{name}.csv").is_file()
+
+
+def test_omega_csv_has_same_rows_as_lab(exp49_results_dir):
+    # both files have one header line, then one line per row
+    csv_lines = (exp49_results_dir / "omega.csv").read_text().splitlines()
+    lab_lines = (FIXTURES_DIR / "omega_exp49.txt").read_text().splitlines()
+    assert len(csv_lines) == len(lab_lines)

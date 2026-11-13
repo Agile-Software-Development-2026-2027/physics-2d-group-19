@@ -3,6 +3,22 @@ from pathlib import Path
 import numpy as np
 
 from core.clam_pipeline.analyze import AnalysisOutputs, AnalysisParams
+from core.clam_pipeline.io import save_df_csv
+
+# Names of the exported CSV tables: equal to the AnalysisOutputs fields,
+# so save_csv can read them with getattr and the API can use them as a whitelist.
+RESULT_NAMES = (
+    "theta",
+    "theta_y",
+    "theta_y_axis0",
+    "theta_y_axis1",
+    "flux",
+    "angle",
+    "omega",
+    "tumbling_orientation",
+    "tumbling_duration",
+    "nt_stats",
+)
 
 
 # This function is from the legacy-code/clam-pipeline-cli.py file
@@ -94,6 +110,18 @@ def save_legacy_txt(
     saved_paths: list[Path] = []
     for df, out_path, header in files_to_save:
         _save_legacy_txt(df, out_path, header)
+        saved_paths.append(out_path)
+
+    return saved_paths
+
+
+def save_csv(outputs: AnalysisOutputs, results_dir: Path) -> list[Path]:
+    """Save every AnalysisOutputs table as <name>.csv (full table, full precision)."""
+    saved_paths: list[Path] = []
+    for name in RESULT_NAMES:
+        df = getattr(outputs, name)
+        out_path = results_dir / f"{name}.csv"
+        save_df_csv(df, out_path)
         saved_paths.append(out_path)
 
     return saved_paths

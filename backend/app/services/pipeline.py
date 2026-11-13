@@ -7,7 +7,7 @@ from app.resources import ANALYSIS_PARAMS, TRACKING_CONFIG_JSON
 from app.services.analysis import run_analysis
 from app.services.jobs_store import job_dir, read_status, write_status
 from app.services.plots import generate_plots
-from app.services.results import save_legacy_txt
+from app.services.results import save_csv, save_legacy_txt
 from app.services.tracking import run_tracking
 from core.tracking_core import load_config_json
 
@@ -38,6 +38,7 @@ def run_job(data_dir: Path, job_id: str) -> None:
         write_status(data_dir, job_id, "analysis")
         outputs = run_analysis(exp_id, settings_txt, traj_path, input_dir)
         save_legacy_txt(outputs, results_dir, exp_id, ANALYSIS_PARAMS)
+        save_csv(outputs, results_dir)
 
         write_status(data_dir, job_id, "plots")
         raw_plots = generate_plots(results_dir, settings_txt, input_dir, exp_id, plots_dir)

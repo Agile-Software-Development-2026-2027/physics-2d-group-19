@@ -6,6 +6,7 @@ import {
   getToken,
   setToken,
   getExperiment,
+  uploadIllumination,
   createJob,
   getJob
 } from './client.js'
@@ -13,6 +14,20 @@ import {
 afterEach(() => {
   clearToken()
   vi.restoreAllMocks()
+})
+
+it('uploadIllumination sends the image as file and returns the canonical name', async () => {
+  const result = { ill: 14, filename: 'illumination14.tiff' }
+  const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify(result), { status: 201 }),
+  )
+  const image = new File(['image'], 'original.tif')
+  expect(await uploadIllumination(49, image)).toEqual(result)
+  const [url, options] = spy.mock.calls[0]
+  expect(url).toContain('/api/experiments/49/illumination')
+  expect(options.method).toBe('POST')
+  expect([...options.body.keys()]).toEqual(['file'])
+  expect(options.body.get('file')).toBe(image)
 })
 
 it('sends the token', async () => {

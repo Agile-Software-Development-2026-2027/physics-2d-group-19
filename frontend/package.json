@@ -13,6 +13,7 @@
     "dev:mock": "vite --mode mock"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.3.1",
     "@tailwindcss/vite": "^4.3.5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

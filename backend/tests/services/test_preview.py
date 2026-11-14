@@ -1,8 +1,12 @@
+from io import BytesIO
+
 import numpy as np
+import pandas as pd
 import pytest
+from PIL import Image
 
 from app.schemas.params import TrackingParams
-from app.services.preview import BACKGROUND_SAMPLE_SIZE, detect_frame
+from app.services.preview import BACKGROUND_SAMPLE_SIZE, CIRCLE_COLOR, detect_frame, render_png
 from tests.core.test_smoke import N_FRAMES, SIZE, START_POSITIONS
 
 # Lab defaults, except minmass, lowered for the small synthetic cells (as in test_smoke.py)
@@ -83,3 +87,53 @@ def test_without_background_subtraction(tmp_path, monkeypatch, cell_frames):
 
     assert reads == [[5]]
     assert len(features) == len(START_POSITIONS)
+
+
+def _open_png(png):
+    """Reads the PNG back as an array of RGB pixels, shaped (rows, columns, 3)."""
+    image = Image.open(BytesIO(png))
+    assert image.format == "PNG"
+    return np.asarray(image.convert("RGB"))
+
+
+def test_png_has_the_frame_size():
+    frame = np.full((40, 60), 100, dtype=np.float32)
+    positions = pd.DataFrame({"x": [30.0], "y": [20.0]})
+
+    pixels = _open_png(render_png(frame, positions, 5))
+
+    assert pixels.shape == (40, 60, 3)
+
+
+def test_no_cells_leaves_the_frame_unchanged():
+    frame = np.full((40, 60), 100, dtype=np.float32)
+    positions = pd.DataFrame(columns=["x", "y"], dtype=float)
+
+    pixels = _open_png(render_png(frame, positions, 5))
+
+    assert (pixels == 100).all()
+
+
+def test_draws_a_circle_around_the_cell():
+    frame = np.full((40, 60), 100, dtype=np.float32)
+    positions = pd.DataFrame({"x": [30.0], "y": [20.0]})
+
+    pixels = _open_png(render_png(frame, positions, 5))
+
+    rows, cols = np.nonzero((pixels == CIRCLE_COLOR).all(axis=-1))
+    assert len(rows) > 0
+    # Every red pixel lies on the circle of radius 5 around the cell (1 px of rounding).
+    distance = np.hypot(rows - 20, cols - 30)
+    assert (np.abs(distance - 5) <= 1).all()
+    # The cell itself stays visible.
+    assert tuple(pixels[20, 30]) == (100, 100, 100)
+
+
+def test_renders_the_detected_cells(tmp_path, monkeypatch, cell_frames):
+    _fake_video(monkeypatch, cell_frames)
+    image, features = detect_frame(tmp_path / "video.avi", 5, PARAMS)
+
+    pixels = _open_png(render_png(image, features, PARAMS.diameter))
+
+    assert pixels.shape == (SIZE, SIZE, 3)
+    assert (pixels == CIRCLE_COLOR).all(axis=-1).any()

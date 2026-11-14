@@ -1,17 +1,21 @@
 """Detection preview: finds the cells on one frame with the same functions as the tracking."""
 
+from io import BytesIO
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pims
 import trackpy as tp
+from PIL import Image, ImageDraw
 
 from app.schemas.params import TrackingParams
 from core.tracking_core import subtract_background
 
 # Enough frames to estimate the background without reading the whole video.
 BACKGROUND_SAMPLE_SIZE = 50
+# Red stands out on a grayscale frame, as in tp.annotate of the lab app.
+CIRCLE_COLOR = (255, 0, 0)
 
 
 def _frame_count(video_path: Path) -> int:
@@ -65,3 +69,21 @@ def detect_frame(
     )
 
     return image, features
+
+
+def render_png(frame: np.ndarray, positions: pd.DataFrame, diameter: int) -> bytes:
+    """Draws a circle around each cell found on the frame; returns the image as PNG."""
+    # The frame comes from the video, so its values are already 0-255.
+    gray = np.clip(frame, 0, 255).astype(np.uint8)
+    image = Image.fromarray(gray).convert("RGB")
+    draw = ImageDraw.Draw(image)
+
+    # Radius equal to the diameter: the circle surrounds the cell instead of covering its edge.
+    radius = diameter
+    # trackpy's x is the column and y the row, the same order Pillow expects.
+    for x, y in zip(positions["x"], positions["y"], strict=True):
+        draw.ellipse((x - radius, y - radius, x + radius, y + radius), outline=CIRCLE_COLOR)
+
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()

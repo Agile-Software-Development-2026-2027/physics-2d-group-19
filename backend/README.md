@@ -102,4 +102,16 @@ integration, and zero is not yet usable end to end through the canonical file al
 For 20.3, use this directory when the job has no illumination attached. For 16.4, call the
 endpoint after saving the experiment and show the returned filename; the form is separate.
 
+## Detection preview (PHYSTUFF2D-120, 10.1–10.2)
+
+`app.services.preview` shows the cells found on one frame, before the full tracking:
+
+- `detect_frame(video_path, frame, params)` reads only that frame and returns it with the
+  positions found by `tp.locate`, using the same channel, background method, `diameter`,
+  `minmass` and `invert` as the tracking. A frame outside the video raises `ValueError`.
+- `render_png(frame, positions, diameter)` returns a PNG of the frame, with the same size,
+  and a red circle of radius `diameter` around each cell.
+
+The preview estimates the background on a sample of `BACKGROUND_SAMPLE_SIZE` frames
+instead of the whole video, so its result can differ slightly from the full tracking.
 

@@ -1,6 +1,15 @@
 import { ParametersSection } from '../../components/ParametersSection/ParametersSection.jsx'
 import { useProcessingPageModel } from './ProcessingPage.model'
 
+{/*const AVAILABLE_EXPERIMENTS = [
+  { id: '49', name: 'exp_049_algae_tracking', date: '01 Nov 2026' },
+  { id: '50', name: 'exp_050_fluorescence_test', date: '03 Nov 2026' },
+  { id: '51', name: 'exp_051_photonics_run', date: '05 Nov 2026' },
+  { id: '52', name: 'exp_052_lightfield_scan', date: '08 Nov 2026' },
+  { id: '53', name: 'exp_053_high_density', date: '09 Nov 2026' },
+]*/}
+
+
 export function ProcessingPage({ pollMs = 2000 }) {
   const model = useProcessingPageModel(pollMs)
 

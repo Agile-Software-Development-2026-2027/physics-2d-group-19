@@ -151,6 +151,7 @@ def test_run_job_calls_make_gif_and_isolates_errors(
     # Mock tracking/analysis/plots stages to isolate GIF testing
     monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a, **kw: object())
     monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a, **kw: None)
+    monkeypatch.setattr("app.services.pipeline.save_csv", lambda *a, **kw: None)
     monkeypatch.setattr("app.services.pipeline.generate_plots", lambda *a, **kw: {"flux": "ok"})
 
     # Simulate GIF failure
@@ -183,6 +184,7 @@ def test_run_job_skips_make_gif_when_disabled(
 
     monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a, **kw: object())
     monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a, **kw: None)
+    monkeypatch.setattr("app.services.pipeline.save_csv", lambda *a, **kw: None)
     monkeypatch.setattr("app.services.pipeline.generate_plots", lambda *a, **kw: {"flux": "ok"})
 
     called = False

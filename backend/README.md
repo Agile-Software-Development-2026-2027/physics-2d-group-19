@@ -47,3 +47,59 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 Keep `.env` local; it is ignored by Git. The committed `.env.example` contains only a
 placeholder, never a real signing secret.
+
+## Pre-job upload storage (PHYSTUFF2D-130)
+
+`app.services.uploads` saves opaque bytes independently of jobs:
+
+```python
+from io import BytesIO
+from pathlib import Path
+
+from app.services.uploads import UploadTooLarge, save_upload, upload_path
+
+data_dir = Path("data")  # endpoints pass get_settings().data_dir
+upload_id = save_upload(data_dir, BytesIO(b"example"), "video.avi", max_bytes=1024)
+content = upload_path(data_dir, upload_id)  # Path to the saved file
+assert content.read_bytes() == b"example"
+```
+
+The layout is `uploads/<12-lowercase-hex-id>/content` plus `meta.json`, for example
+`{"filename": "video.avi", "size_bytes": 7, "created_at": "2026-11-09T12:00:00+00:00"}`.
+The original filename is metadata only; physical content has a fixed name without a suffix.
+Metadata is published atomically after content is closed and marks completion.
+
+The service reads at most 1 MiB per call, from the current stream position, without
+closing or rewinding it. It accepts empty streams and does not validate media formats.
+`max_bytes=None` imposes no limit; equality is allowed, zero allows only empty streams,
+and a negative limit raises `ValueError` before touching disk. Exceeding the limit raises
+`UploadTooLarge` (a `ValueError`). Failed saves remove only their newly created directory;
+I/O errors propagate. If cleanup itself fails, the original error retains a diagnostic note.
+
+`upload_path` raises `KeyError` for invalid IDs, unknown uploads, missing content or missing
+metadata. Malformed metadata JSON raises `json.JSONDecodeError`; other I/O errors propagate.
+Readers never derive a path from metadata. Video/TIFF validation, configured size limits,
+HTTP error mapping and canonical experiment/job copies belong to the consuming endpoints.
+
+## Experiment illumination upload (PHYSTUFF2D-145, 16.3)
+
+`POST /api/experiments/{exp_id}/illumination` requires a Bearer token and multipart field
+`file`. `.tif`/`.tiff` extensions are case insensitive; bytes are not decoded or converted.
+For experiment 49 (`ill=14`), success is `201 {"ill":14,"filename":"illumination14.tiff"}`.
+Missing files/names or unsupported extensions return 422, empty files 400, unknown
+experiments 404, and missing/invalid tokens 401. No illumination size limit is introduced.
+
+The real pre-job storage service retains completed uploads and metadata. Its suffixless
+`content` is copied in 1 MiB blocks to a unique temporary in
+`APP_DATA_DIR/experiments/illumination`, then published with `os.replace`. Failed copies or
+publication preserve the previous canonical file and remove the temporary; internal storage
+errors return a generic 500. Concurrent successful uploads for the same `ill` share one file:
+the last publication wins. Experiment settings are unchanged.
+
+The canonical name always uses `ill`, including `illumination0.tiff` for zero. The current
+core maps zero to `illumination1.tiff`; resolving that discrepancy belongs to job/core
+integration, and zero is not yet usable end to end through the canonical file alone.
+For 20.3, use this directory when the job has no illumination attached. For 16.4, call the
+endpoint after saving the experiment and show the returned filename; the form is separate.
+
+

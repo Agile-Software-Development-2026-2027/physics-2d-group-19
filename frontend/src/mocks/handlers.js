@@ -35,34 +35,84 @@ const getExperimentHandler = http.get('/api/experiments/:id' , ({params}) => {
         )
 })
 
-const getDefaultParamsHandler = http.get('/api/params/defaults' , () => {
-    return HttpResponse.json(
-        { 
+const getDefaultParamsHandler = http.get('/api/params/defaults', () => {
+    return HttpResponse.json({
+        tracking: {
+            channel: 2,
+            background_subtraction: true,
+            background_method: 'mean',
+            diameter: 5,
+            minmass: 180,
+            invert: false,
+            search_range: 10,
+            adaptive_stop: 5,
+            adaptive_step: 0.98,
+            memory: null,
+            filter_stubs: 0,
+        },
+        analysis: {
+            diam: 10,
+            dt: 0.1,
+            particle_show: 5,
+            disc_radius: 350,
+            flux_cg_in: 1,
+            flux_cg_out: 150,
+            tumbling_threshold: 5.0,
+            radial_map: false,
+            nskip: 1,
+        },
+        filters: {
+            lifetime_min: 0,
+            threshold_dist: 0,
+            threshold_dist_tot: 0,
+            dist_step: 1,
+            strict: true,
+            only_inside: true,
+            blinking_ratio: 0,
+            blinking_tolerance: 0,
+            long_track_min_snaps: 0,
+        },
+        limits: {
             tracking: {
-                diameter: 5,
-                minmass: 180,
-                search_range: 10,
-                background_method: 'mean'
+                channel: { minimum: 0, description: 'Video channel index' },
+                background_subtraction: { description: 'Subtract the video background' },
+                background_method: {
+                    enum: ['mean', 'median'],
+                    description: 'Method used to estimate the video background',
+                },
+                diameter: { minimum: 3, description: 'Feature diameter in pixels; odd and at least 3' },
+                minmass: { minimum: 0, description: 'Minimum integrated feature brightness' },
+                invert: { description: 'Detect dark features on a bright background' },
+                search_range: { minimum: 0, description: 'Maximum displacement between linked frames' },
+                adaptive_stop: { minimum: 0, description: 'Minimum search range during adaptive linking' },
+                adaptive_step: { minimum: 0, description: 'Adaptive linking search range multiplier' },
+                memory: { minimum: 0, description: 'Missing frames allowed; null uses the video frame count minus one' },
+                filter_stubs: { minimum: 0, description: 'Minimum observations per retained track' },
             },
             analysis: {
-                scradius: 130,
-                thickness: 0,
-                radial_map: false,
-                dt: 0.1,
-                tumbling_threshold: 5.0,
-                diam: 10,
-                disc_radius: 130,
-                lifetime_min:0,
-                threshold_dist:1,
-                threshold_dist_tot:3,
-                blinking_ratio:0.5,
-                color:2
+                diam: { minimum: 0, description: 'Diameter used to smooth the illumination field' },
+                dt: { exclusiveMinimum: 0, description: 'Time interval between consecutive frames' },
+                particle_show: { minimum: 1, description: 'Gradient and velocity frame spacing' },
+                disc_radius: { minimum: 0, description: 'Disc radius for flux and particle counts' },
+                flux_cg_in: { minimum: 1, description: 'Frame spacing for detecting disc crossings' },
+                flux_cg_out: { minimum: 1, description: 'Frames per flux aggregation interval' },
+                tumbling_threshold: { minimum: 0, description: 'Tumbling angular velocity threshold' },
+                radial_map: { description: 'Use a radial energy density map' },
+                nskip: { minimum: 1, description: 'Frame spacing for particle count statistics' },
             },
-            limits: {
-                
-            }
+            filters: {
+                lifetime_min: { minimum: 0, description: 'Minimum track lifetime' },
+                threshold_dist: { minimum: 0, description: 'Minimum median step displacement' },
+                threshold_dist_tot: { minimum: 0, description: 'Minimum track endpoint displacement' },
+                dist_step: { minimum: 1, description: 'Observation spacing used by trajectory cleaning' },
+                strict: { description: 'Apply strict trajectory endpoint filtering' },
+                only_inside: { description: 'Keep only trajectory points inside the image' },
+                blinking_ratio: { minimum: 0, description: 'Minimum track presence ratio' },
+                blinking_tolerance: { minimum: 0, description: 'Long track presence ratio tolerance' },
+                long_track_min_snaps: { minimum: 0, description: 'Observations required for long track tolerance' },
+            },
         },
-    )
+    })
 })
     
 const getRunStatusHandler = http.get('/api/runs/:id' , ({params}) => {
@@ -76,7 +126,7 @@ const getRunStatusHandler = http.get('/api/runs/:id' , ({params}) => {
         )
     else if (params.id === 'run-error')
         return HttpResponse.json(
-            { id : params.id , status:'error' , messagge : 'An error occured'}
+            { id : params.id , status:'error' , message : 'An error occurred'}
             
         )
     else

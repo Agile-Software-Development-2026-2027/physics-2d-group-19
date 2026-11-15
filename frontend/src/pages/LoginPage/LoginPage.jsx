@@ -18,7 +18,7 @@ export function LoginPage() {
     try {
       // login() salva anche il token
       await login(username, password)
-      navigate('/elaborazione')
+      navigate('/processing')
     } catch {
       setError('Username or password incorrect')
       setSending(false)

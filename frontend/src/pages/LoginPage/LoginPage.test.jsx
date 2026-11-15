@@ -23,7 +23,7 @@ function showLoginPage() {
     <MemoryRouter initialEntries={['/login']}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/elaborazione" element={<div>Processing page</div>} />
+        <Route path="/processing" element={<div>Processing page</div>} />
       </Routes>
     </MemoryRouter>,
   )

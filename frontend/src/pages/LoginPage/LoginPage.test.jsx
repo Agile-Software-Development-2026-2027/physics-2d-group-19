@@ -104,5 +104,5 @@ test('disables the button while the request is running', async () => {
 test('shows session expired message when expired=1 query param is present', () => {
   showLoginPage('/login?expired=1')
 
-  expect(screen.getByRole('alert')).toHaveTextContent('Sessione scaduta, accedi di nuovo')
+  expect(screen.getByRole('alert')).toHaveTextContent('Session expired, please log in again')
 })

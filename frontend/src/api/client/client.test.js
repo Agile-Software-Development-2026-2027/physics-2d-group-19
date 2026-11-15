@@ -14,6 +14,7 @@ import {
 afterEach(() => {
   clearToken()
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
 
 it('uploadIllumination sends the image as file and returns the canonical name', async () => {
@@ -144,7 +145,6 @@ it('clears token and redirects to /login?expired=1 on 401 outside login', async 
 
   expect(getToken()).toBeNull()
   expect(assignSpy).toHaveBeenCalledWith('/login?expired=1')
-  vi.unstubAllGlobals()
 })
 
 it('does not redirect on 401 from /auth/login', async () => {
@@ -159,5 +159,4 @@ it('does not redirect on 401 from /auth/login', async () => {
   })
 
   expect(assignSpy).not.toHaveBeenCalled()
-  vi.unstubAllGlobals()
 })

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ParamsForm } from '../../components/ParamsForm/ParamsForm.jsx'
 import { createJob, getJob } from '../../api/client/client.js'
 
 const PHASES = {
@@ -28,16 +29,9 @@ export function ProcessingPage({ pollMs = 2000 }) {
   const [mainFile, setMainFile] = useState(null)
   const [illumination, setIllumination] = useState(null)
   const [settings, setSettings] = useState(null)
-  const [analysParams, setAnalysisParams] = useState({
-    diam: 10,
-    fluxCgIn: 1,
-    dt: 0.1,
-    fluxCgOut: 150,
-    discRadius: 350,
-    nSkip: 1,
-    tumblingThreshold: 5,
-    useRadialMap: false
-  })
+  const [params, setParams] = useState(null)
+  const [paramsValid, setParamsValid] = useState(true)
+
   const [jobId, setJobId] = useState(null)
   const [status, setStatus] = useState(null)
   const [error, setError] = useState(null)
@@ -63,13 +57,6 @@ export function ProcessingPage({ pollMs = 2000 }) {
     setExperiment(updated.join(', '))
   }*/
 
-  // Aumenta o Diminuisci i valori dei parametri
-  function updateParam(key, value) {
-    setAnalysisParams((prev) => ({
-      ...prev,
-      [key]: Math.max(0, (prev[key] || 0) + value),
-    }))
-  }
 
   async function start() {
     setError(null)
@@ -81,6 +68,9 @@ export function ProcessingPage({ pollMs = 2000 }) {
     formData.append(kindDataInput, mainFile)
     formData.append('illumination', illumination)
     formData.append('settings', settings)
+    if (params) {
+      formData.append('params', JSON.stringify(params))
+    }
 
     try {
       const job = await createJob(formData)
@@ -334,73 +324,14 @@ export function ProcessingPage({ pollMs = 2000 }) {
             )}
           </div>
 
-          {/* Parametri di Analisi */}
-          <details className="group border border-border rounded-xl bg-surface p-4">
-            <summary className="flex items-center justify-between font-semibold text-text cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
-              <span>Parametri Analisi</span>
-
-              <svg
-                className="w-4 h-4 text-text-muted transition-transform duration-200 group-open:rotate-180"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-
-            <div className="mt-4 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { id: 'diam', label: 'Diametro' },
-                { id: 'fluxCgIn', label: 'Flusso CG In' },
-                { id: 'dt', label: 'dt (Intervallo)', step: 0.1 },
-                { id: 'fluxCgOut', label: 'Flusso CG Out' },
-                { id: 'discRadius', label: 'Raggio Disco' },
-                { id: 'nSkip', label: 'N Skip' },
-                { id: 'tumblingThreshold', label: 'Soglia Tumbling' },
-              ].map((field) => (
-                <div
-                  key={field.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-border bg-bg"
-                >
-                  <span className="text-xs font-semibold text-text">{field.label}</span>
-
-                  {/* Controlli +/- e Input */}
-                  <div className="flex items-center gap-1 bg-surface border border-border rounded-lg p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => updateParam(field.id, -(field.step || 1))}
-                      className="w-7 h-7 flex items-center justify-center rounded-md bg-bg hover:bg-border text-text font-bold text-sm transition-colors cursor-pointer select-none active:scale-95"
-                    >
-                      -
-                    </button>
-
-                    <input
-                      type="number"
-                      step={field.step || 1}
-                      value={analysParams[field.id]}
-                      onChange={(e) =>
-                        setAnalysisParams({
-                          ...analysParams,
-                          [field.id]: Number(e.target.value) || 0,
-                        })
-                      }
-                      className="w-12 text-center text-xs font-semibold text-text bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => updateParam(field.id, field.step || 1)}
-                      className="w-7 h-7 flex items-center justify-center rounded-md bg-bg hover:bg-border text-text font-bold text-sm transition-colors cursor-pointer select-none active:scale-95"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </details>
+          {/* Parametri di elaborazione */}
+          <ParamsForm
+            onChange={(updatedParams, isValid) => {
+              setParams(updatedParams)
+              setParamsValid(isValid)
+            }}
+            disabled={running}
+          />
 
 
           {/* Pulsante Avvia */}
@@ -408,7 +339,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
             <button
               type="button"
               onClick={start}
-              disabled={!experiment || !mainOk || !illuminationOk || running}
+              disabled={!experiment || !mainOk || !illuminationOk || !params || !paramsValid || running}
               className="w-full py-3 px-6 rounded-xl font-semibold text-white bg-alga hover:bg-alga-hover shadow-xs transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
             >
               {running && (

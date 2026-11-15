@@ -16,6 +16,7 @@ def test_states_in_order_with_trajectories(tmp_path, monkeypatch):
     monkeypatch.setattr("app.services.pipeline.write_status", spy)
     monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a: "outputs")
     monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a: [])
+    monkeypatch.setattr("app.services.pipeline.save_csv", lambda *a: [])
     monkeypatch.setattr(
         "app.services.pipeline.generate_plots",
         lambda *a: {"flux": str(a[-1] / "flux.png")},
@@ -43,6 +44,7 @@ def test_states_in_order_with_video(tmp_path, monkeypatch):
     monkeypatch.setattr("app.services.pipeline.run_tracking", lambda *a: tracked_txt)
     monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a: "outputs")
     monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a: [])
+    monkeypatch.setattr("app.services.pipeline.save_csv", lambda *a: [])
     monkeypatch.setattr(
         "app.services.pipeline.generate_plots",
         lambda *a: {"flux": str(a[-1] / "flux.png")},
@@ -75,6 +77,7 @@ def test_plot_failure_is_recorded(tmp_path, monkeypatch):
     plots_dir = job_dir(tmp_path, job_id) / "plots"
     monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a: "outputs")
     monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a: [])
+    monkeypatch.setattr("app.services.pipeline.save_csv", lambda *a: [])
     monkeypatch.setattr(
         "app.services.pipeline.generate_plots",
         lambda *a: {"flux": str(plots_dir / "flux.png"), "nt_stats": None},

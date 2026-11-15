@@ -166,19 +166,63 @@ const listRunsHandler = http.get('/api/runs', () => {
 })
 
 
-const getRunResultsHandler = http.get('/api/runs/:id/results', () => {
-  return HttpResponse.json({
-    theta: { x: [0, 1, 2], y: [0.1, 0.2, 0.3] },
-    flux: { x: [0, 1, 2], y: [5, 6, 7] },
-    omega: { x: [0, 1, 2], y: [1, 2, 3] },
+// Same names as RESULT_NAMES in backend/app/services/results.py
+const RESULT_NAMES = [
+  'theta',
+  'theta_y',
+  'theta_y_axis0',
+  'theta_y_axis1',
+  'flux',
+  'angle',
+  'omega',
+  'tumbling_orientation',
+  'tumbling_duration',
+  'nt_stats',
+]
+
+// GET /api/jobs/{job_id}/results -> list_results (backend/app/api/results.py)
+const listResultsHandler = http.get('/api/jobs/:id/results', ({ params }) => {
+  return HttpResponse.json(
+    RESULT_NAMES.map((name) => ({
+      name,
+      url: `/api/jobs/${params.id}/results/${name}.csv`,
+    })),
+  )
+})
+
+// GET /api/jobs/{job_id}/results/{name}.csv -> get_result (backend/app/api/results.py)
+const downloadResultCsvHandler = http.get('/api/jobs/:id/results/:name.csv', ({ params }) => {
+  return new HttpResponse(`${params.name},dists,time\n0.29,794.83,4.4\n`, {
+    headers: { 'Content-Type': 'text/csv' },
   })
 })
 
-
-const downloadResultCsvHandler = http.get('/api/runs/:id/results/:quantity.csv', () =>{
-    return HttpResponse.json(
-        {content : 'content'}
-    )
+// GET /api/jobs/{job_id}/config -> get_job_config (backend/app/api/jobs.py, 23.1)
+const getJobConfigHandler = http.get('/api/jobs/:id/config', () => {
+  return HttpResponse.json({
+    version: 1,
+    created_at: '2026-11-13T16:42:10.123456+00:00',
+    experiment: {
+      exps: 49, exp_type: 1, ill: 14, intensity: 180, pix_arr: 1.041667,
+      no_skip: true, ctr: 0, fluo: 0, lin: 0, axis: 0,
+    },
+    params: {
+      tracking: {
+        channel: 2, background_subtraction: true, background_method: 'mean', diameter: 5,
+        minmass: 180, invert: false, search_range: 10, adaptive_stop: 5, adaptive_step: 0.98,
+        memory: null, filter_stubs: 0,
+      },
+      analysis: {
+        diam: 10, dt: 0.1, particle_show: 5, disc_radius: 350, flux_cg_in: 1,
+        flux_cg_out: 150, tumbling_threshold: 5.0, radial_map: false, nskip: 1,
+      },
+      filters: {
+        lifetime_min: 0, threshold_dist: 0, threshold_dist_tot: 0, dist_step: 1, strict: true,
+        only_inside: true, blinking_ratio: 0, blinking_tolerance: 0, long_track_min_snaps: 0,
+      },
+    },
+    inputs: { video: 'tAlgae49.avi', illumination: 'illumination14.tiff' },
+  })
 })
 
 // job_id -> how many times its status was read
@@ -235,8 +279,9 @@ export const handlers = [
     getVideoPreviewHandler,
     startRunHandler,
     listRunsHandler,
-    getRunResultsHandler,
+    listResultsHandler,
     downloadResultCsvHandler,
+    getJobConfigHandler,
     listPlotsHandler,
     downloadPlotHandler,
     createJobHandler,

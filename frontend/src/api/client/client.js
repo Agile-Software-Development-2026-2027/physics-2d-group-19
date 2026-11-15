@@ -117,11 +117,11 @@ export async function getExperimentStatus(id) {
 }
 
 export async function getElaborationResults(id) {
-  return await apiFetch(`/runs/${id}/results`)
+  return await apiFetch(`/jobs/${id}/results`)
 }
 
 export async function downloadElaborationResultCsv(id, grandezza) {
-  const res = await apiFetchRaw(`/runs/${id}/results/${grandezza}.csv`)
+  const res = await apiFetchRaw(`/jobs/${id}/results/${grandezza}.csv`)
 
   const blob = await res.blob()
 
@@ -143,6 +143,11 @@ export async function createJob(formData) {
 // GET /api/jobs/{job_id} -> get_job
 export async function getJob(id) {
   return await apiFetch(`/jobs/${id}`)
+}
+
+// GET /api/jobs/{job_id}/config -> job_config (backend/app/api/jobs.py)
+export async function getJobConfig(id) {
+  return await apiFetch(`/jobs/${id}/config`)
 }
 
 // GET /api/jobs/{job_id}/plots/ -> list_plots (backend/app/api/plots.py)

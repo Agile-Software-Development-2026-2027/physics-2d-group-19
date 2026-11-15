@@ -80,3 +80,26 @@ I/O errors propagate. If cleanup itself fails, the original error retains a diag
 metadata. Malformed metadata JSON raises `json.JSONDecodeError`; other I/O errors propagate.
 Readers never derive a path from metadata. Video/TIFF validation, configured size limits,
 HTTP error mapping and canonical experiment/job copies belong to the consuming endpoints.
+
+## Experiment illumination upload (PHYSTUFF2D-145, 16.3)
+
+`POST /api/experiments/{exp_id}/illumination` requires a Bearer token and multipart field
+`file`. `.tif`/`.tiff` extensions are case insensitive; bytes are not decoded or converted.
+For experiment 49 (`ill=14`), success is `201 {"ill":14,"filename":"illumination14.tiff"}`.
+Missing files/names or unsupported extensions return 422, empty files 400, unknown
+experiments 404, and missing/invalid tokens 401. No illumination size limit is introduced.
+
+The real pre-job storage service retains completed uploads and metadata. Its suffixless
+`content` is copied in 1 MiB blocks to a unique temporary in
+`APP_DATA_DIR/experiments/illumination`, then published with `os.replace`. Failed copies or
+publication preserve the previous canonical file and remove the temporary; internal storage
+errors return a generic 500. Concurrent successful uploads for the same `ill` share one file:
+the last publication wins. Experiment settings are unchanged.
+
+The canonical name always uses `ill`, including `illumination0.tiff` for zero. The current
+core maps zero to `illumination1.tiff`; resolving that discrepancy belongs to job/core
+integration, and zero is not yet usable end to end through the canonical file alone.
+For 20.3, use this directory when the job has no illumination attached. For 16.4, call the
+endpoint after saving the experiment and show the returned filename; the form is separate.
+
+

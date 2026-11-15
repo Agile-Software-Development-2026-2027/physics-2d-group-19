@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
     auth,
     experiments,
+    gif,
     health,
     history,
     jobs,
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
         jobs.router,
         plots.router,
         results.router,
+        gif.router,
         history.router,
     ]
     for router in protected_routers:

@@ -36,6 +36,29 @@ For these outputs there is no lab file, so the expected values come from the leg
 
 These are not confirmed by the lab yet. `Flux` and `N_dist` depend on the disc radius, which was taken from the live demo and not checked against a lab file.
 
+## Video clip (`clip/`)
+
+The full video of experiment 49 (`tAlgae49.avi`, 1.8 GB) never goes in the repository or in CI. A short clip and the trajectories that the legacy tracking finds on it let a test check the tracking from the video (end-to-end test 14.7).
+
+| File | What it is | Size | md5 |
+| --- | --- | --- | --- |
+| `clip/tAlgae49_clip.avi` | Frames 0–29 of `tAlgae49.avi`, lossless (FFV1, 8-bit grey, 10 fps) | 17.2 MB | `dfd53454558e4c0ac2f0c831679d1b0d` |
+| `clip/tAlgae49_clip.txt` | Trajectories of the legacy `tracking_algae.py` on the clip (`frame,y,x,particle`) | 0.2 MB | `2fb2d3159665d5201a3ef3977748b2e1` |
+
+- **Source:** `tAlgae49.avi` from the project Google Drive, 1368×912, `rawvideo` `pal8` with a grey palette, 10 fps, 1501 frames.
+- **Frames:** 0–29. The tracking reads 29 of them (0–28): `load_video_to_ram` skips the last frame, like the lab code. The planning document asked for about 100 frames under 20 MB, but the video is noisy and FFV1 needs 0.57 MB per frame: 100 frames would weigh 57 MB.
+- **Lossless:** the script checks that the tracking reads from the clip exactly the pixels it reads from the same frames of the full video.
+- **Tracking:** `legacy-code/tracking_from_video/configs/config_tracking-49-65.json` (channel 2, mean background, diameter 5, minmass 180, search range 10), in one process. The background is the mean of the clip frames, not of the whole video, so these trajectories are not the first frames of `tAlgae49.txt`.
+- **Result:** 3,937 positions in 29 frames (136 cells per frame on average), 1,810 trajectories. The backend tracking (`app.services.tracking.run_tracking`) gives the same rows with identical positions.
+
+Regenerate both files from the repository root, with the backend environment (its tracking libraries have the same versions as `legacy-code/requirements.txt`) and the full video in `docs/`:
+
+```bash
+backend/.venv/bin/python backend/scripts/make_clip_reference.py --video docs/tAlgae49.avi --frames 30
+```
+
+On Windows the interpreter is `backend\.venv\Scripts\python`. Running it again gives the same md5. The trajectories are always written with LF line endings, so the line endings do not change the hash between Windows and Linux.
+
 ## Parameters
 
 Analysis (`AnalysisParams`):

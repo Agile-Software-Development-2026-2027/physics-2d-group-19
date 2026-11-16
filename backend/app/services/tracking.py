@@ -49,6 +49,8 @@ def run_tracking(video_path: Path, out_dir: Path, cfg: TrackingConfig) -> Path:
     check_video(video_path)
     try:
         frames, _fps, _duration = load_video_to_ram(video_path, cfg.channel)
+    except MemoryError:  # the video is fine, the machine is short of RAM
+        raise
     except Exception as exc:  # a file that opens but is corrupted further on
         raise ValueError(VIDEO_UNREADABLE) from exc
     n_frames = frames.shape[0]

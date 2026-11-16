@@ -79,6 +79,18 @@ def test_run_tracking_on_a_video_corrupted_further_on(tmp_path, monkeypatch):
         run_tracking(tmp_path / "tAlgae49.avi", tmp_path / "out", TRACKING_CONFIG)
 
 
+def test_run_tracking_lets_memory_error_through(tmp_path, monkeypatch):
+    # A valid video too big for the RAM must not be reported as unreadable.
+    monkeypatch.setattr("app.services.tracking.check_video", lambda path: (10, 10.0))
+
+    def out_of_memory(path, channel):
+        raise MemoryError
+
+    monkeypatch.setattr("app.services.tracking.load_video_to_ram", out_of_memory)
+    with pytest.raises(MemoryError):
+        run_tracking(tmp_path / "tAlgae49.avi", tmp_path / "out", TRACKING_CONFIG)
+
+
 def test_job_with_unreadable_video_ends_with_a_clear_error(tmp_path):
     job_id = create_job(tmp_path, 49)
     (job_dir(tmp_path, job_id) / "input" / "tAlgae49.avi").write_text("this is not a video")

@@ -4,6 +4,7 @@ import json
 import os
 import re
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -28,7 +29,16 @@ def create_job(data_dir: Path, exp_id: int) -> str:
         break
     for name in ("input", "parameters", "tracking", "results", "plots"):
         (directory / name).mkdir()
-    _save_status(directory, {"job_id": job_id, "exp_id": exp_id, "status": "queued", "error": None})
+    _save_status(
+        directory,
+        {
+            "job_id": job_id,
+            "exp_id": exp_id,
+            "status": "queued",
+            "error": None,
+            "created_at": datetime.now(UTC).isoformat(),
+        },
+    )
     return job_id
 
 
@@ -59,7 +69,7 @@ def write_status(
     State transitions are the orchestrator's responsibility. Atomic replacement
     protects readers from partial JSON, but does not coordinate concurrent writers.
     """
-    if {"job_id", "exp_id"} & extra.keys():
+    if {"job_id", "exp_id", "created_at"} & extra.keys():
         raise ValueError("Job identity cannot be changed")
     payload = read_status(data_dir, job_id)
     payload.update(extra)

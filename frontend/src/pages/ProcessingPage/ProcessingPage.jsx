@@ -1,14 +1,6 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ParamsForm } from '../../components/ParamsForm/ParamsForm.jsx'
-import { createJob, getJob } from '../../api/client/client.js'
-
-const PHASES = {
-  queued: 'In coda',
-  tracking: 'Tracking delle cellule',
-  analysis: 'Analisi',
-  plots: 'Creazione dei grafici',
-}
+import { Link } from 'react-router-dom'
+import { ParametersSection } from '../../components/ParametersSection/ParametersSection.jsx'
+import { useProcessingPageModel } from './ProcessingPage.model'
 
 {/*const AVAILABLE_EXPERIMENTS = [
   { id: '49', name: 'exp_049_algae_tracking', date: '01 Nov 2026' },
@@ -18,104 +10,21 @@ const PHASES = {
   { id: '53', name: 'exp_053_high_density', date: '09 Nov 2026' },
 ]*/}
 
-
 export function ProcessingPage({ pollMs = 2000 }) {
-  const navigate = useNavigate()
-  const [experiment, setExperiment] = useState('')
-  //const [isFolderOpen, setIsFolderOpen] = useState(false)
-
-  const [kindDataInput, setKindDataInput] = useState('trajectories')
-  const [kindMachine, setKindMachine] = useState('microscope2d')
-  const [mainFile, setMainFile] = useState(null)
-  const [illumination, setIllumination] = useState(null)
-  const [settings, setSettings] = useState(null)
-  const [params, setParams] = useState(null)
-  const [paramsValid, setParamsValid] = useState(true)
-
-  const [jobId, setJobId] = useState(null)
-  const [status, setStatus] = useState(null)
-  const [error, setError] = useState(null)
-
-  const running = status !== null && status !== 'done' && status !== 'error'
-
-  // Calcola in tempo reale la lista degli ID risolti (inclusi i range)
-  //const parsedExpIds = parseExperimentIds(experiment)
-
-  const mainExtension = kindDataInput === 'video' ? '.avi' : '.txt'
-  const mainOk = mainFile?.name.toLowerCase().endsWith(mainExtension)
-  const illuminationName = illumination?.name.toLowerCase() ?? ''
-  const settingsName = settings?.name ?? ''
-  const illuminationOk = illuminationName.endsWith('.tif') || illuminationName.endsWith('.tiff')
-  const settingsOk = settingsName.endsWith('.txt')
-
-  // Aggiunge o rimuove un ID dalla selezione
-  /*function toggleExperiment(id) {
-    const updated = parsedExpIds.includes(id)
-      ? parsedExpIds.filter((item) => item !== id)
-      : [...parsedExpIds, id]
-
-    setExperiment(updated.join(', '))
-  }*/
-
-
-  async function start() {
-    setError(null)
-    setStatus('queued')
-    const formData = new FormData()
-
-    formData.append('exp_id', experiment.trim())
-    formData.append('machine', kindMachine)
-    formData.append(kindDataInput, mainFile)
-    formData.append('illumination', illumination)
-    formData.append('settings', settings)
-    if (params) {
-      formData.append('params', JSON.stringify(params))
-    }
-
-    try {
-      const job = await createJob(formData)
-      setJobId(job.job_id)
-    } catch {
-      setStatus(null)
-      setError("Impossibile avviare l'elaborazione.")
-    }
-  }
-
-  useEffect(() => {
-    if (!jobId) return
-    const timer = setInterval(async () => {
-      try {
-        const job = await getJob(jobId)
-        setStatus(job.status)
-        if (job.status === 'done') {
-          clearInterval(timer)
-          navigate(`/risultati/${jobId}`)
-        } else if (job.status === 'error') {
-          clearInterval(timer)
-          setError(job.error)
-        }
-      } catch {
-        clearInterval(timer)
-        setStatus('error')
-        setError("Stato dell'elaborazione non disponibile.")
-      }
-    }, pollMs)
-
-    return () => clearInterval(timer)
-  }, [jobId, pollMs, navigate])
+  const model = useProcessingPageModel(pollMs)
 
   return (
-    <div className="max-w-2xl mx-auto my-6 space-y-6">
+    <div className="p-6 max-w-5xl mx-auto my-6 space-y-6">
 
       {/* 1. SELETTORE MACCHINA */}
       <fieldset className="space-y-1.5">
         <legend className="text-sm font-semibold text-text">Seleziona Macchina utilizzata</legend>
         <div className="inline-flex p-1 bg-bg border border-border rounded-xl w-full">
-          {['microscope2d', 'photonicsLab', 'lightfield'].map((machine) => (
+          {model.MACHINES.map(({ id, label }) => (
             <label
-              key={machine}
+              key={id}
               className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer ${
-                kindMachine === machine
+                model.kindMachine === id
                   ? 'bg-surface text-alga shadow-xs font-semibold border border-border/50'
                   : 'text-text-muted hover:text-text'
               }`}
@@ -123,11 +32,11 @@ export function ProcessingPage({ pollMs = 2000 }) {
               <input
                 type="radio"
                 name="kindMachine"
-                checked={kindMachine === machine}
-                onChange={() => setKindMachine(machine)}
+                checked={model.kindMachine === id}
+                onChange={() => model.setKindMachine(id)}
                 className="sr-only"
               />
-              {machine === 'microscope2d' ? 'Microscope2D' : machine === 'photonicsLab' ? 'PhotonicsLab' : 'LightField'}
+              {label}
             </label>
           ))}
         </div>
@@ -136,13 +45,13 @@ export function ProcessingPage({ pollMs = 2000 }) {
       {/* CARD FORM ELABORAZIONE */}
       <div className="p-6 md:p-8 bg-surface border border-border rounded-2xl shadow-sm text-left space-y-6">
 
-        {/* 2. SELETTORE TIPO INPUT Analisi */}
+        {/* 2. SELETTORE TIPO INPUT ANALISI */}
         <fieldset className="space-y-1.5">
           <legend className="text-sm font-semibold text-text">Cosa vuoi analizzare?</legend>
           <div className="inline-flex p-1 bg-bg border border-border rounded-xl w-full">
             <label
               className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer ${
-                kindDataInput === 'trajectories'
+                model.kindDataInput === 'trajectories'
                   ? 'bg-surface text-alga shadow-xs font-semibold border border-border/50'
                   : 'text-text-muted hover:text-text'
               }`}
@@ -150,8 +59,8 @@ export function ProcessingPage({ pollMs = 2000 }) {
               <input
                 type="radio"
                 name="kindDataInput"
-                checked={kindDataInput === 'trajectories'}
-                onChange={() => setKindDataInput('trajectories')}
+                checked={model.kindDataInput === 'trajectories'}
+                onChange={() => model.setKindDataInput('trajectories')}
                 className="sr-only"
               />
               Traiettorie
@@ -159,7 +68,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
 
             <label
               className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer ${
-                kindDataInput === 'video'
+                model.kindDataInput === 'video'
                   ? 'bg-surface text-alga shadow-xs font-semibold border border-border/50'
                   : 'text-text-muted hover:text-text'
               }`}
@@ -167,8 +76,8 @@ export function ProcessingPage({ pollMs = 2000 }) {
               <input
                 type="radio"
                 name="kindDataInput"
-                checked={kindDataInput === 'video'}
-                onChange={() => setKindDataInput('video')}
+                checked={model.kindDataInput === 'video'}
+                onChange={() => model.setKindDataInput('video')}
                 className="sr-only"
               />
               Video
@@ -176,192 +85,131 @@ export function ProcessingPage({ pollMs = 2000 }) {
           </div>
         </fieldset>
 
-        {/* 3. CAMPO NUMERO ESPERIMENTO CON SUPPORTO RANGE + CARTELLA */}
+        {/* 3. CAMPO NUMERO ESPERIMENTO */}
         <div className="relative space-y-2">
-          {/*<div className="flex justify-between items-center">
+          <div className="flex justify-between items-center">
             <label htmlFor="experiment-input" className="text-sm font-semibold text-text">
-              ID esperimenti
+              Numero esperimento
             </label>
-
-            <button
-              type="button"
-              onClick={() => setIsFolderOpen(!isFolderOpen)}
-              className="text-xs font-semibold text-alga hover:underline flex items-center gap-1 cursor-pointer"
+            <Link
+              to="/esperimento"
+              className="text-xs font-semibold text-alga hover:underline flex items-center gap-1"
             >
-              <i className="fa-regular fa-folder-open"></i>
-              {isFolderOpen ? 'Chiudi cartella' : 'Sfoglia cartella esperimenti'}
-            </button>
-          </div>*/}
+              Gestisci esperimenti →
+            </Link>
+          </div>
 
           <input
             id="experiment-input"
             type="text"
             placeholder="Es. 49"
-            value={experiment}
-            onChange={(e) => setExperiment(e.target.value)}
+            value={model.experiment}
+            onChange={(e) => model.setExperiment(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg text-text font-normal focus:outline-none focus:ring-2 focus:ring-alga/50 focus:border-alga transition-all"
           />
-
-          {/*<p className="text-xs text-text-muted">
-            Puoi inserire un numero singolo (<code className="font-mono text-alga">49</code>), liste (<code className="font-mono text-alga">49, 50</code>) o intervalli (<code className="font-mono text-alga">49-53</code>).
-          </p>*/}
-
-          {/* Tag con gli ID espansi in tempo reale */}
-          {/*{parsedExpIds.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              <span className="text-xs text-text-muted self-center mr-1">Trovati ({parsedExpIds.length}):</span>
-              {parsedExpIds.map((id) => (
-                <span
-                  key={id}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-alga-light text-alga border border-alga/20"
-                >
-                  #{id}
-                  <button
-                    type="button"
-                    onClick={() => toggleExperiment(id)}
-                    className="hover:text-red-500 font-bold ml-1 cursor-pointer"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}*/}
-
-          {/* TENDINA CARTELLA DROPDOWN */}
-          {/*{isFolderOpen && (
-            <div className="absolute z-10 w-full mt-1 p-3 bg-surface border border-border rounded-xl shadow-lg space-y-2 text-left">
-              <div className="flex justify-between items-center pb-2 border-b border-border text-xs text-text-muted">
-                <span>Percorso: <code className="font-mono bg-bg px-1 rounded">/data/esperimenti/</code></span>
-                <span>{parsedExpIds.length} selezionati</span>
-              </div>
-
-              <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
-                {AVAILABLE_EXPERIMENTS.map((exp) => {
-                  const isChecked = parsedExpIds.includes(exp.id)
-                  return (
-                    <label
-                      key={exp.id}
-                      className={`flex items-center justify-between p-2 rounded-lg text-sm cursor-pointer transition-colors ${
-                        isChecked ? 'bg-alga-light/60 text-alga font-medium' : 'hover:bg-bg text-text'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleExperiment(exp.id)}
-                          className="w-4 h-4 text-alga border-border rounded focus:ring-alga cursor-pointer"
-                        />
-                        <span>#{exp.id} - {exp.name}</span>
-                      </div>
-                      <span className="text-xs text-text-muted">{exp.date}</span>
-                    </label>
-                  )
-                })}
-              </div>
-            </div>
-          )}*/}
         </div>
 
         {/* 4. FILE CARICATI & SUBMIT */}
-        <div className="space-y-5 pt-2">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label htmlFor="main-file-input" className="text-sm font-semibold text-text cursor-pointer">
-                {kindDataInput === "video" ? "Carica video (*.avi)" : "Carica traiettoria (*.txt)"}
-              </label>
-            </div>
-            <input
-              id="main-file-input"
-              type="file"
-              accept={mainExtension}
-              onChange={(e) => setMainFile(e.target.files[0] ?? null)}
-              className="block w-full text-sm text-text-muted border border-border rounded-xl bg-bg cursor-pointer file:mr-4 file:py-2.5 file:px-4 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-alga-light file:text-alga hover:file:bg-alga/20 transition-all"
-            />
-            {mainFile && !mainOk && (
-              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                Il file deve essere {mainExtension}
-              </p>
-            )}
-          </div>
+        <div className="pt-2">
 
-          {/* File illuminazione */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="illumination-file-input" className="text-sm font-semibold text-text cursor-pointer">
-              Carica file Illuminazione (*.tiff | *.tif)
-            </label>
-            <input
-              id="illumination-file-input"
-              type="file"
-              accept=".tif,.tiff"
-              onChange={(e) => setIllumination(e.target.files[0] ?? null)}
-              className="block w-full text-sm text-text-muted border border-border rounded-xl bg-bg cursor-pointer file:mr-4 file:py-2.5 file:px-4 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-alga-light file:text-alga hover:file:bg-alga/20 transition-all"
-            />
-            {illumination && !illuminationOk && (
-              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                L'illuminazione deve essere .tif o .tiff
-              </p>
-            )}
-          </div>
+          {/* FILE PRINCIPALE */}
+          <div className="mb-8 pb-7 border-b border-border">
+            <div className="p-5 rounded-2xl border-2 border-dashed border-alga/40 bg-alga-light/15 hover:border-alga transition-colors space-y-3">
+              <div className="flex items-center justify-between">
+                <label htmlFor="main-file-input" className="text-base font-bold text-text cursor-pointer flex items-center gap-2">
+                  {model.kindDataInput === 'video' ? 'Carica video (*.avi)' : 'Carica traiettoria (*.txt)'}
+                </label>
+              </div>
 
-          {/*File settings*/}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="settings-file-input" className="text-sm font-semibold text-text cursor-pointer">
-              Carica file Settings (*.txt)
-            </label>
-            <input
-              id="settings-file-input"
-              type="file"
-              accept=".txt"
-              onChange={(e) => setSettings(e.target.files[0] ?? null)}
-              className="block w-full text-sm text-text-muted border border-border rounded-xl bg-bg cursor-pointer file:mr-4 file:py-2.5 file:px-4 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-alga-light file:text-alga hover:file:bg-alga/20 transition-all"
-            />
-            {settings && !settingsOk && (
-              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                Il file settings deve essere .txt
-              </p>
-            )}
-          </div>
+              <input
+                id="main-file-input"
+                type="file"
+                accept={model.mainExtension}
+                onChange={(e) => model.setMainFile(e.target.files[0] ?? null)}
+                className="block w-full text-sm text-text-muted border border-border rounded-xl bg-surface cursor-pointer file:mr-4 file:py-3 file:px-5 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-alga file:text-white hover:file:bg-alga-hover transition-all"
+              />
 
-          {/* Parametri di elaborazione */}
-          <ParamsForm
-            onChange={(updatedParams, isValid) => {
-              setParams(updatedParams)
-              setParamsValid(isValid)
-            }}
-            disabled={running}
-          />
-
-
-          {/* Pulsante Avvia */}
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={start}
-              disabled={!experiment || !mainOk || !illuminationOk || !params || !paramsValid || running}
-              className="w-full py-3 px-6 rounded-xl font-semibold text-white bg-alga hover:bg-alga-hover shadow-xs transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
-            >
-              {running && (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {model.mainFile && !model.mainOk && (
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                  Il file deve essere {model.mainExtension}
+                </p>
               )}
-              Avvia
-            </button>
+            </div>
           </div>
 
-          {/* Fasi e Errori */}
-          {running && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-alga-light/50 border border-alga/20 text-alga font-medium text-sm animate-pulse">
-              <span className="w-2.5 h-2.5 rounded-full bg-alga animate-ping" />
-              {PHASES[status] ?? status}
+          <div className="space-y-5">
+            {/* File illuminazione */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="illumination-file-input" className="text-sm font-semibold text-text cursor-pointer">
+                Carica file Illuminazione (*.tiff | *.tif)
+              </label>
+              <input
+                id="illumination-file-input"
+                type="file"
+                accept=".tif,.tiff"
+                onChange={(e) => model.setIllumination(e.target.files[0] ?? null)}
+                className="block w-full text-sm text-text-muted border border-border rounded-xl bg-bg cursor-pointer file:mr-4 file:py-2.5 file:px-4 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-alga-light file:text-alga hover:file:bg-alga/20 transition-all"
+              />
+              {model.illumination && !model.illuminationOk && (
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                  L&apos;illuminazione deve essere .tif o .tiff
+                </p>
+              )}
             </div>
-          )}
 
-          {error && (
-            <p role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium">
-              {error}
-            </p>
-          )}
+            {/* Parametri di Analisi */}
+            <ParametersSection
+              title="Parametri di Analisi"
+              fields={model.ANALYS_FIELDS}
+              values={model.analysParams}
+              onChange={model.setAnalysisParams}
+            />
+
+            {/* Parametri plot Theta p0 */}
+            <ParametersSection
+              title="Parametri Plot Theta p0"
+              fields={model.PLOT_FIELDS}
+              values={model.plotParams}
+              onChange={model.setPlotParams}
+            />
+
+            {/* Parametri filtri */}
+            <ParametersSection
+              title="Filtri traiettorie"
+              fields={model.FILTER_FIELDS}
+              values={model.filterParams}
+              onChange={model.setFilterParams}
+            />
+
+            {/* Pulsante Avvia */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={model.start}
+                disabled={!model.canSubmit}
+                className="w-full py-3 px-6 rounded-xl font-semibold text-white bg-alga hover:bg-alga-hover shadow-xs transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              >
+                {model.running && (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                Avvia
+              </button>
+            </div>
+
+            {/* Fasi e Errori */}
+            {model.running && (
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-alga-light/50 border border-alga/20 text-alga font-medium text-sm animate-pulse">
+                <span className="w-2.5 h-2.5 rounded-full bg-alga animate-ping" />
+                {model.PHASES[model.status] ?? model.status}
+              </div>
+            )}
+
+            {model.error && (
+              <p role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium">
+                {model.error}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

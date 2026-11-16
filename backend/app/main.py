@@ -13,6 +13,7 @@ from app.api import (
     preview,
     results,
     upload,
+    videos,
 )
 from app.api.deps import get_current_user
 from app.config import get_settings
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
         results.router,
         gif.router,
         history.router,
+        videos.router,
     ]
     for router in protected_routers:
         app.include_router(

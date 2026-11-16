@@ -24,7 +24,13 @@ def _load_job_params(data_dir: Path, job_id: str) -> ProcessingParams:
         config = load_config(data_dir, job_id)
     except KeyError:
         return ProcessingParams()
-    return ProcessingParams.model_validate(config["params"])
+    except ValueError:
+        config_path = job_dir(data_dir, job_id) / "parameters" / "config.json"
+        raw = json.loads(config_path.read_text(encoding="utf-8"))
+        if "version" in raw:
+            raise
+        config = raw
+    return ProcessingParams.model_validate(config.get("params") or {})
 
 
 # Helper function to check if the user enabled `make_gif` in the job configuration.

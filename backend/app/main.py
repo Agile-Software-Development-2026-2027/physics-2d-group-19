@@ -1,7 +1,18 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, experiments, health, history, jobs, params, plots, preview, upload
+from app.api import (
+    auth,
+    experiments,
+    health,
+    history,
+    jobs,
+    params,
+    plots,
+    preview,
+    results,
+    upload,
+)
 from app.api.deps import get_current_user
 from app.config import get_settings
 
@@ -34,6 +45,7 @@ def create_app() -> FastAPI:
         params.router,
         jobs.router,
         plots.router,
+        results.router,
         history.router,
     ]
     for router in protected_routers:

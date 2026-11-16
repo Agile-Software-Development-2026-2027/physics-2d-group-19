@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { login } from '../../api/client/client.js'
 
 export function LoginPage() {
@@ -8,6 +8,8 @@ export function LoginPage() {
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sessionExpired = searchParams.get('expired') === '1'
 
   async function handleSubmit(event) {
     // Evita il ricaricamento della pagina
@@ -54,6 +56,12 @@ export function LoginPage() {
             />
           </label>
         </div>
+
+        {sessionExpired && !error && (
+          <p role="alert" className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium">
+            Session expired, please log in again
+          </p>
+        )}
 
         {error && (
           <p role="alert" className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium">

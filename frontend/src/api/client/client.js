@@ -8,6 +8,10 @@ export async function apiFetchRaw(path, options = {}) {
   const res = await fetch(`${BASE_URL}/api${path}`, { ...options, headers })
 
   if (!res.ok) {
+    if (res.status === 401 && path !== '/auth/login') {
+      clearToken()
+      window.location.assign('/login?expired=1')
+    }
     const err = new Error(`HTTP ${res.status}`)
     err.status = res.status
     throw err

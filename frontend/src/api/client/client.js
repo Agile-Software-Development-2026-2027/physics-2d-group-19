@@ -61,8 +61,23 @@ export async function uploadExperimentSettings(settings) {
   return data
 }
 
+// GET /api/experiments -> list of recorded experiments
+export async function getExperiments() {
+  return await apiFetch('/experiments')
+}
+
+// GET /api/experiments/{id} -> details of a single experiment
 export async function getExperiment(id) {
   return await apiFetch(`/experiments/${id}`)
+}
+
+// PUT /api/experiments/{id} -> save/update experiment settings
+export async function saveExperiment(id, settings) {
+  return await apiFetch(`/experiments/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  })
 }
 
 export async function uploadIllumination(id, imgFile) {

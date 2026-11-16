@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { ParamsForm } from '../../components/ParamsForm/ParamsForm.jsx'
 import { createJob, getJob } from '../../api/client/client.js'
 
@@ -192,6 +192,18 @@ export function ProcessingPage({ pollMs = 2000 }) {
               {isFolderOpen ? 'Chiudi cartella' : 'Sfoglia cartella esperimenti'}
             </button>
           </div>*/}
+
+          <div className="flex justify-between items-center">
+            <label htmlFor="experiment-input" className="text-sm font-semibold text-text">
+              Numero esperimento
+            </label>
+            <Link
+              to="/esperimento"
+              className="text-xs font-semibold text-alga hover:underline flex items-center gap-1"
+            >
+              Gestisci esperimenti →
+            </Link>
+          </div>
 
           <input
             id="experiment-input"

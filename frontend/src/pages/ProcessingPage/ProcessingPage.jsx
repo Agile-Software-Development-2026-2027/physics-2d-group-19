@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { ParametersSection } from '../../components/ParametersSection/ParametersSection.jsx'
 import { useProcessingPageModel } from './ProcessingPage.model'
 
@@ -8,7 +9,6 @@ import { useProcessingPageModel } from './ProcessingPage.model'
   { id: '52', name: 'exp_052_lightfield_scan', date: '08 Nov 2026' },
   { id: '53', name: 'exp_053_high_density', date: '09 Nov 2026' },
 ]*/}
-
 
 export function ProcessingPage({ pollMs = 2000 }) {
   const model = useProcessingPageModel(pollMs)
@@ -89,8 +89,14 @@ export function ProcessingPage({ pollMs = 2000 }) {
         <div className="relative space-y-2">
           <div className="flex justify-between items-center">
             <label htmlFor="experiment-input" className="text-sm font-semibold text-text">
-              ID esperimenti
+              Numero esperimento
             </label>
+            <Link
+              to="/esperimento"
+              className="text-xs font-semibold text-alga hover:underline flex items-center gap-1"
+            >
+              Gestisci esperimenti →
+            </Link>
           </div>
 
           <input

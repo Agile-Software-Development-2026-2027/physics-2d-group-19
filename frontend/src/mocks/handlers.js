@@ -27,12 +27,66 @@ const createExperimentHandler = http.post('/api/experiments' , async ({ request 
         )
 })
 
-const getExperimentHandler = http.get('/api/experiments/:id' , ({params}) => {
+// Mock in-memory storage for registered experiments
+let mockExperiments = [
+  {
+    exps: 49,
+    exp_type: 1,
+    ill: 14,
+    intensity: 180,
+    pix_arr: 1.041667,
+    no_skip: true,
+    ctr: 0,
+    fluo: 0,
+    lin: 0,
+    axis: 0,
+  },
+]
+
+// GET /api/experiments -> List all registered experiments
+const listExperimentsHandler = http.get('/api/experiments', () => {
+  return HttpResponse.json(mockExperiments)
+})
+
+// GET /api/experiments/:id -> Retrieve settings of a single experiment
+const getExperimentHandler = http.get('/api/experiments/:id', ({ params }) => {
+  const exp = mockExperiments.find((e) => e.exps === Number(params.id))
+  if (!exp) {
+    return HttpResponse.json({ detail: 'Experiment not found' }, { status: 404 })
+  }
+  return HttpResponse.json(exp)
+})
+
+// PUT /api/experiments/:id -> Save or update experiment settings
+const saveExperimentHandler = http.put('/api/experiments/:id', async ({ params, request }) => {
+  const body = await request.json()
+  const expId = Number(params.id)
+
+  // Enforce URL id and body exps match (same validation as backend)
+  if (body.exps !== expId) {
     return HttpResponse.json(
-        {   id : params.id ,
-            exps : 49 , exp_type : 1 , ill : 14 , intensity : 180 , pix_arr : 1.041667 , 
-            no_skip : 1 , ctr : 0 , fluo : 0 , lin : 0 , axis : 0, }
-        )
+      {
+        detail: [
+          {
+            loc: ['body', 'exps'],
+            msg: 'exps must match the experiment number in the URL',
+            type: 'value_error',
+          },
+        ],
+      },
+      { status: 422 },
+    )
+  }
+
+  // Update existing experiment or append newly created one
+  const idx = mockExperiments.findIndex((e) => e.exps === expId)
+  if (idx >= 0) {
+    mockExperiments[idx] = body
+  } else {
+    mockExperiments.push(body)
+    mockExperiments.sort((a, b) => a.exps - b.exps)
+  }
+  return HttpResponse.json(body)
 })
 
 const getDefaultParamsHandler = http.get('/api/params/defaults', () => {
@@ -271,7 +325,9 @@ export const handlers = [
     loginHandler , 
     getCurrentUserHandler , 
     createExperimentHandler,
+    listExperimentsHandler,
     getExperimentHandler,
+    saveExperimentHandler,
     getDefaultParamsHandler,
     getRunStatusHandler,
     uploadIlluminationHandler,

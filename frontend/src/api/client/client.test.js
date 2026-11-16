@@ -6,6 +6,7 @@ import {
   getToken,
   setToken,
   getExperiment,
+  uploadIllumination,
   createJob,
   getJob
 } from './client.js'
@@ -13,6 +14,21 @@ import {
 afterEach(() => {
   clearToken()
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
+})
+
+it('uploadIllumination sends the image as file and returns the canonical name', async () => {
+  const result = { ill: 14, filename: 'illumination14.tiff' }
+  const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify(result), { status: 201 }),
+  )
+  const image = new File(['image'], 'original.tif')
+  expect(await uploadIllumination(49, image)).toEqual(result)
+  const [url, options] = spy.mock.calls[0]
+  expect(url).toContain('/api/experiments/49/illumination')
+  expect(options.method).toBe('POST')
+  expect([...options.body.keys()]).toEqual(['file'])
+  expect(options.body.get('file')).toBe(image)
 })
 
 it('sends the token', async () => {
@@ -115,4 +131,32 @@ it('getJob fetches the job status by ID', async () => {
   await getJob('abc')
 
   expect(spy.mock.calls[0][0]).toContain('/jobs/abc')
+})
+
+it('clears token and redirects to /login?expired=1 on 401 outside login', async () => {
+  setToken('expired-jwt')
+  const assignSpy = vi.fn()
+  vi.stubGlobal('location', { assign: assignSpy })
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response('{}', { status: 401 }),
+  )
+
+  await expect(apiFetch('/jobs/abc')).rejects.toMatchObject({ status: 401 })
+
+  expect(getToken()).toBeNull()
+  expect(assignSpy).toHaveBeenCalledWith('/login?expired=1')
+})
+
+it('does not redirect on 401 from /auth/login', async () => {
+  const assignSpy = vi.fn()
+  vi.stubGlobal('location', { assign: assignSpy })
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response('{}', { status: 401 }),
+  )
+
+  await expect(apiFetch('/auth/login', { method: 'POST' })).rejects.toMatchObject({
+    status: 401,
+  })
+
+  expect(assignSpy).not.toHaveBeenCalled()
 })

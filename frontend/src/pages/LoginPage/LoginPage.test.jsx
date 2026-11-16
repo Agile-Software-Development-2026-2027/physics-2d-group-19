@@ -18,12 +18,12 @@ beforeEach(() => {
 
 // Show the login page inside a fake router.
 // The fake "Processing page" is where the user must arrive after a correct login
-function showLoginPage() {
+function showLoginPage(initialEntry = '/login') {
   render(
-    <MemoryRouter initialEntries={['/login']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/elaborazione" element={<div>Processing page</div>} />
+        <Route path="/processing" element={<div>Processing page</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -97,4 +97,12 @@ test('disables the button while the request is running', async () => {
 
   // Wait until the request is finished, so the test ends cleanly
   expect(await screen.findByText('Processing page')).toBeInTheDocument()
+})
+
+// TEST 5
+// When redirected with ?expired=1 the page must show the expired session message
+test('shows session expired message when expired=1 query param is present', () => {
+  showLoginPage('/login?expired=1')
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Session expired, please log in again')
 })

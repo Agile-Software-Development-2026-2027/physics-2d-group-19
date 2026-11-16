@@ -8,6 +8,10 @@ export async function apiFetchRaw(path, options = {}) {
   const res = await fetch(`${BASE_URL}/api${path}`, { ...options, headers })
 
   if (!res.ok) {
+    if (res.status === 401 && path !== '/auth/login') {
+      clearToken()
+      window.location.assign('/login?expired=1')
+    }
     const err = new Error(`HTTP ${res.status}`)
     err.status = res.status
     throw err
@@ -57,13 +61,28 @@ export async function uploadExperimentSettings(settings) {
   return data
 }
 
+// GET /api/experiments -> list of recorded experiments
+export async function getExperiments() {
+  return await apiFetch('/experiments')
+}
+
+// GET /api/experiments/{id} -> details of a single experiment
 export async function getExperiment(id) {
   return await apiFetch(`/experiments/${id}`)
 }
 
+// PUT /api/experiments/{id} -> save/update experiment settings
+export async function saveExperiment(id, settings) {
+  return await apiFetch(`/experiments/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  })
+}
+
 export async function uploadIllumination(id, imgFile) {
   const formData = new FormData()
-  formData.append('img', imgFile)
+  formData.append('file', imgFile)
 
   const data = await apiFetch(`/experiments/${id}/illumination`, {
     method: 'POST',
@@ -117,11 +136,11 @@ export async function getExperimentStatus(id) {
 }
 
 export async function getElaborationResults(id) {
-  return await apiFetch(`/runs/${id}/results`)
+  return await apiFetch(`/jobs/${id}/results`)
 }
 
 export async function downloadElaborationResultCsv(id, grandezza) {
-  const res = await apiFetchRaw(`/runs/${id}/results/${grandezza}.csv`)
+  const res = await apiFetchRaw(`/jobs/${id}/results/${grandezza}.csv`)
 
   const blob = await res.blob()
 
@@ -143,6 +162,11 @@ export async function createJob(formData) {
 // GET /api/jobs/{job_id} -> get_job
 export async function getJob(id) {
   return await apiFetch(`/jobs/${id}`)
+}
+
+// GET /api/jobs/{job_id}/config -> job_config (backend/app/api/jobs.py)
+export async function getJobConfig(id) {
+  return await apiFetch(`/jobs/${id}/config`)
 }
 
 // GET /api/jobs/{job_id}/plots/ -> list_plots (backend/app/api/plots.py)

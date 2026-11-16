@@ -6,6 +6,7 @@ import { getHealth } from './api/client/client.js'
 import { LoginPage } from './pages/LoginPage/LoginPage.jsx'
 import { ProcessingPage } from './pages/ProcessingPage/ProcessingPage.jsx'
 import { MainLayout } from './layouts/MainLayout.jsx'
+import { ResultsPage } from './pages/ResultsPage/ResultsPage.jsx'
 import { ExperimentPage } from './pages/ExperimentPage/ExperimentPage.jsx'
 
 export default function App() {
@@ -25,7 +26,8 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route path="/processing" element={<ProcessingPage />} />
-            <Route path="/elaboration" element={<ExperimentPage/>} />
+            <Route path="/esperimento" element={<ExperimentPage />} />
+            <Route path="/risultati/:jobId" element={<ResultsPage />} />
           </Route>
         </Route>
 

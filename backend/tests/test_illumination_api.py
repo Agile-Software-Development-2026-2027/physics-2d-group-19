@@ -1,5 +1,7 @@
 import json
+from contextlib import contextmanager
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -7,6 +9,7 @@ from app.api import experiments as api
 from app.security import create_access_token
 from app.services.experiments_store import settings_path
 
+CHUNK = 1024 * 1024
 URL = "/api/experiments/49/illumination"
 
 
@@ -127,3 +130,104 @@ def test_unauthorized_upload_saves_nothing(upload, tmp_path, headers):
 def test_file_field_is_required(client, auth_headers, tmp_path, files):
     assert client.post(URL, headers=auth_headers, files=files).status_code == 422
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("failure", ["save", "missing", "metadata", "copy", "publish"])
+def test_internal_failure_preserves_canonical_and_cleans_temporary(
+    upload, tmp_path, monkeypatch, failure
+):
+    target = canonical(tmp_path)
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"keep")
+    resolve, replace = api.upload_path, api.os.replace
+
+    def fail(*args, **kwargs):
+        raise OSError("private/server/path")
+
+    def broken_resolve(data_dir, upload_id):
+        path = resolve(data_dir, upload_id)
+        if failure == "missing":
+            path.unlink()
+        else:
+            (path.parent / "meta.json").write_text("broken JSON")
+        return resolve(data_dir, upload_id)
+
+    def partial_copy(source, destination, **kwargs):
+        destination.write(source.read(CHUNK))
+        fail()
+
+    def broken_publish(source, destination):
+        if destination == target:
+            assert target.read_bytes() == b"keep"
+            assert Path(source).read_bytes() == b"replacement"
+            fail()
+        replace(source, destination)
+
+    if failure == "save":
+        monkeypatch.setattr(api, "save_upload", fail)
+    elif failure in {"missing", "metadata"}:
+        monkeypatch.setattr(api, "upload_path", broken_resolve)
+    elif failure == "copy":
+        monkeypatch.setattr(api.shutil, "copyfileobj", partial_copy)
+    else:
+        monkeypatch.setattr(api.os, "replace", broken_publish)
+    response = upload(content=b"replacement")
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Could not save illumination"}
+    assert target.read_bytes() == b"keep"
+    assert list(target.parent.iterdir()) == [target]
+    if failure in {"copy", "publish"}:
+        [directory] = (tmp_path / "uploads").iterdir()
+        assert resolve(tmp_path, directory.name).read_bytes() == b"replacement"
+
+
+def test_both_copies_read_in_bounded_blocks(upload, tmp_path, monkeypatch):
+    save, open_file = api.save_upload, Path.open
+    reads = {"staging": 0, "canonical": 0}
+
+    class BoundedStream:
+        def __init__(self, stream, phase):
+            self.stream, self.phase = stream, phase
+
+        def read(self, size=-1):
+            assert 0 < size <= CHUNK
+            reads[self.phase] += 1
+            return self.stream.read(size)
+
+    def bounded_save(data_dir, source, filename):
+        return save(data_dir, BoundedStream(source, "staging"), filename)
+
+    @contextmanager
+    def bounded_reader(stream):
+        with stream:
+            yield BoundedStream(stream, "canonical")
+
+    def bounded_open(path, *args, **kwargs):
+        stream = open_file(path, *args, **kwargs)
+        return bounded_reader(stream) if path.name == "content" and args == ("rb",) else stream
+
+    monkeypatch.setattr(api, "save_upload", bounded_save)
+    monkeypatch.setattr(Path, "open", bounded_open)
+    content = b"x" * (2 * CHUNK + 17)
+    assert upload(content=content).status_code == 201
+    assert reads == {"staging": 4, "canonical": 4}
+    assert canonical(tmp_path).read_bytes() == content
+
+
+def test_openapi_documents_upload_contract(client):
+    schema = client.get("/openapi.json").json()
+    operation = schema["paths"]["/api/experiments/{exp_id}/illumination"]["post"]
+    body = operation["requestBody"]["content"]["multipart/form-data"]["schema"]
+    models = schema["components"]["schemas"]
+    request = models[body["$ref"].split("/")[-1]]
+    assert request["required"] == ["file"]
+    field = request["properties"]["file"]
+    assert field["type"] == "string"
+    assert (
+        field.get("format") == "binary"
+        or field.get("contentMediaType") == "application/octet-stream"
+    )
+    response = operation["responses"]["201"]["content"]["application/json"]["schema"]
+    assert models[response["$ref"].split("/")[-1]]["required"] == ["ill", "filename"]
+    assert {"400", "404", "422"} <= operation["responses"].keys()
+    assert operation["security"] == [{"HTTPBearer": []}]

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@fortawesome/fontawesome-free/css/all.min.css";
 
 @font-face {
   font-family: 'Sponge Lump';
@@ -11,9 +12,10 @@
     font-style: normal;
 }
 
+
 :root {
-  --color-alga: #2e7d32;
-  --color-alga-hover: #1b5e20;
+  --color-alga: #658A2A;
+  --color-alga-hover: #506e21;
   --color-alga-light: #e8f5e9;
 
   --color-bg: #f8fafc;
@@ -25,8 +27,8 @@
 }
 
 .dark {
-  --color-alga: #4caf50;
-  --color-alga-hover: #66bb6a;
+  --color-alga: #658A2A;
+  --color-alga-hover: #79a532;
   --color-alga-light: #1b381e;
 
   --color-bg: #0f172a;

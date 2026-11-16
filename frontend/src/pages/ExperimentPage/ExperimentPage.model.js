@@ -1,0 +1,206 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getExperiments, saveExperiment } from '../../api/client/client.js'
+
+// Default values populated when initiating a new experiment
+export const DEFAULT_EXPERIMENT = {
+  exps: '',
+  exp_type: 1,
+  ill: 14,
+  intensity: 180,
+  pix_arr: 1.041667,
+  no_skip: true,
+  ctr: 0,
+  fluo: 0,
+  lin: 0,
+  axis: 0,
+}
+
+// Select dropdown options matching backend ExperimentSettings field descriptions
+export const EXP_TYPES = [
+  { value: 0, label: '0 = none' },
+  { value: 1, label: '1 = normal' },
+  { value: 2, label: '2 = gaussian' },
+  { value: 3, label: '3 = outside' },
+  { value: 4, label: '4 = single cell' },
+  { value: 5, label: '5 = LED' },
+]
+
+export const CTR_OPTIONS = [
+  { value: -1, label: '-1 = left' },
+  { value: 0, label: '0 = centre' },
+  { value: 1, label: '1 = right' },
+]
+
+export const FLUO_OPTIONS = [
+  { value: 0, label: '0 = none' },
+  { value: 1, label: '1 = ring' },
+  { value: 2, label: '2 = gaussian' },
+]
+
+export const LIN_OPTIONS = [
+  { value: 0, label: '0 = no' },
+  { value: 1, label: '1 = yes' },
+]
+
+export const AXIS_OPTIONS = [
+  { value: 0, label: '0 = x' },
+  { value: 1, label: '1 = y' },
+]
+
+// Custom hook encapsulating state, validation, and API interactions for ExperimentPage
+export function useExperimentPageModel() {
+  const navigate = useNavigate()
+
+  const [experiments, setExperiments] = useState([])
+  const [selectedExpId, setSelectedExpId] = useState(null)
+  const [formData, setFormData] = useState(DEFAULT_EXPERIMENT)
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [message, setMessage] = useState(null)
+  const [isEditing, setIsEditing] = useState(false)
+
+  // Fetch list of registered experiments on component mount
+  const fetchExperiments = () => {
+    getExperiments()
+      .then((data) => setExperiments(data || []))
+      .catch(() =>
+        setMessage({ type: 'error', text: 'Impossibile caricare gli esperimenti.' }),
+      )
+  }
+
+  useEffect(() => {
+    fetchExperiments()
+  }, [])
+
+  // Select an existing experiment to view and edit its parameters
+  const selectExperiment = (exp) => {
+    setSelectedExpId(exp.exps)
+    setFormData({ ...exp })
+    setIsEditing(true)
+    setErrors({})
+    setMessage(null)
+  }
+
+  // Reset form to default values for creating a new experiment
+  const newExperiment = () => {
+    setSelectedExpId(null)
+    setFormData(DEFAULT_EXPERIMENT)
+    setIsEditing(false)
+    setErrors({})
+    setMessage(null)
+  }
+
+  // Update a form field and clear its active inline validation error
+  const updateField = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors((prev) => {
+        const updated = { ...prev }
+        delete updated[field]
+        return updated
+      })
+    }
+  }
+
+  // Perform client-side validation before request dispatch
+  const validateForm = () => {
+    const newErrors = {}
+    if (
+      formData.exps === '' ||
+      Number(formData.exps) < 0 ||
+      !Number.isInteger(Number(formData.exps))
+    ) {
+      newErrors.exps = "Inserire un numero d'esperimento valido (intero >= 0)"
+    }
+    if (
+      formData.ill === '' ||
+      Number(formData.ill) < 0 ||
+      !Number.isInteger(Number(formData.ill))
+    ) {
+      newErrors.ill = "Il numero d'illuminazione deve essere un intero >= 0"
+    }
+    if (formData.intensity === '' || Number(formData.intensity) < 0) {
+      newErrors.intensity = "L'intensità deve essere >= 0"
+    }
+    if (formData.pix_arr === '' || Number(formData.pix_arr) <= 0) {
+      newErrors.pix_arr = 'La dimensione del pixel deve essere maggiore di 0'
+    }
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  // Save or update experiment settings via PUT /api/experiments/{id}
+  const save = async (e) => {
+    e.preventDefault()
+    setMessage(null)
+
+    if (!validateForm()) return
+
+    setLoading(true)
+    const payload = {
+      exps: Number(formData.exps),
+      exp_type: Number(formData.exp_type),
+      ill: Number(formData.ill),
+      intensity: Number(formData.intensity),
+      pix_arr: Number(formData.pix_arr),
+      no_skip: Boolean(formData.no_skip),
+      ctr: Number(formData.ctr),
+      fluo: Number(formData.fluo),
+      lin: Number(formData.lin),
+      axis: Number(formData.axis),
+    }
+
+    try {
+      await saveExperiment(payload.exps, payload)
+      setMessage({
+        type: 'success',
+        text: `Esperimento ${payload.exps} salvato con successo!`,
+      })
+      setSelectedExpId(payload.exps)
+      setIsEditing(true)
+      fetchExperiments()
+    } catch (err) {
+      // Map 422 validation error array to individual form fields
+      if (err.status === 422 && Array.isArray(err.detail)) {
+        const backendErrors = {}
+        err.detail.forEach((item) => {
+          const field = item.loc?.[item.loc.length - 1]
+          if (field) backendErrors[field] = item.msg
+        })
+        setErrors(backendErrors)
+        setMessage({ type: 'error', text: 'Errori di validazione nel form.' })
+      } else {
+        setMessage({
+          type: 'error',
+          text: err.detail || err.message || 'Errore durante il salvataggio.',
+        })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return {
+    // Constants
+    EXP_TYPES,
+    CTR_OPTIONS,
+    FLUO_OPTIONS,
+    LIN_OPTIONS,
+    AXIS_OPTIONS,
+    // State & Setters
+    experiments,
+    selectedExpId,
+    formData,
+    loading,
+    errors,
+    message,
+    isEditing,
+    // Actions
+    selectExperiment,
+    newExperiment,
+    updateField,
+    save,
+    goBack: () => navigate('/processing'),
+  }
+}

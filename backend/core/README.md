@@ -14,6 +14,7 @@ The physical equations and algorithms remain frozen and identical to the laborat
 | :--- | :--- | :--- |
 | `clamutils_exp.py` | `clamutils_exp.py` | Core classes: `particle_class`, `Speckle`, `Filters` |
 | `tracking_core.py` | `tracking_from_video/src/tracking_core.py` | Particle detection and tracking with `trackpy` |
+| `traj_gif.py` | Laboratory `traj_gif.py` | Trajectory GIF and frame rendering over fixed illumination ring |
 | `clam_pipeline/analyze.py` | `clam_pipeline/analyze.py` | `analyze_experiment` pipeline and data structures |
 | `clam_pipeline/io.py` | `clam_pipeline/io.py` | Experimental settings parser and legacy loaders |
 | `analyses/common.py` | `analyses/common.py` | Shared plotting constants, styles, and binning helpers |
@@ -68,6 +69,9 @@ To ensure and verify that physical algorithms were not altered, all calculations
 #### 6. `backend/core/analyses/plot_tumbling.py`
 - Old: `from analyses.common import bin_data, COLOR_PINK`
 - New: `from core.analyses.common import bin_data, COLOR_PINK`
+
+#### 7. `backend/core/traj_gif.py`
+- Adapted from the standalone laboratory script `traj_gif.py` to accept explicit file paths and physical parameters (`disc_radius`, `pix`, `dt`, `power_uw`) instead of hardcoded local directories (`BASE`, `ring_geometry.csv`, `talgae_settings_PINN.txt`), compute the illumination ring centre via `cu.Speckle`, and encode `trajectories.gif` via `ImageIO` (`imageio.v3`) without requiring an external `ffmpeg` binary in backend jobs.
 
 ---
 

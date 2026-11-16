@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     jwt_secret: str = "change-me"
     jwt_expire_minutes: int = 480
+    # Largest video accepted by POST /api/videos (3 GB, to confirm with the lab).
+    max_video_bytes: int = 3 * 1024**3
 
 
 @lru_cache

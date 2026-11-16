@@ -55,7 +55,7 @@ def create_job(
         try:
             parsed_params = ProcessingParams.model_validate_json(params)
         except ValidationError as exc:
-            raise HTTPException(422, exc.errors()) from exc
+            raise HTTPException(422, json.loads(exc.json())) from exc
     else:
         parsed_params = ProcessingParams()
 

@@ -1,14 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ParametersSection } from '../../components/ParametersSection/ParametersSection.jsx'
+import { ParamsForm } from '../../components/ParamsForm/ParamsForm.jsx'
 import { useProcessingPageModel } from './ProcessingPage.model'
-
-{/*const AVAILABLE_EXPERIMENTS = [
-  { id: '49', name: 'exp_049_algae_tracking', date: '01 Nov 2026' },
-  { id: '50', name: 'exp_050_fluorescence_test', date: '03 Nov 2026' },
-  { id: '51', name: 'exp_051_photonics_run', date: '05 Nov 2026' },
-  { id: '52', name: 'exp_052_lightfield_scan', date: '08 Nov 2026' },
-  { id: '53', name: 'exp_053_high_density', date: '09 Nov 2026' },
-]*/}
 
 export function ProcessingPage({ pollMs = 2000 }) {
   const model = useProcessingPageModel(pollMs)
@@ -109,7 +101,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
           />
         </div>
 
-        {/* 4. FILE CARICATI & SUBMIT */}
+        {/* 4. FILE CARICATI E PARAMETRI */}
         <div className="pt-2">
 
           {/* FILE PRINCIPALE */}
@@ -139,7 +131,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
 
           <div className="space-y-5">
             {/* File illuminazione */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 mb-6">
               <label htmlFor="illumination-file-input" className="text-sm font-semibold text-text cursor-pointer">
                 Carica file Illuminazione (*.tiff | *.tif)
               </label>
@@ -157,32 +149,11 @@ export function ProcessingPage({ pollMs = 2000 }) {
               )}
             </div>
 
-            {/* Parametri di Analisi */}
-            <ParametersSection
-              title="Parametri di Analisi"
-              fields={model.ANALYS_FIELDS}
-              values={model.analysParams}
-              onChange={model.setAnalysisParams}
-            />
-
-            {/* Parametri plot Theta p0 */}
-            <ParametersSection
-              title="Parametri Plot Theta p0"
-              fields={model.PLOT_FIELDS}
-              values={model.plotParams}
-              onChange={model.setPlotParams}
-            />
-
-            {/* Parametri filtri */}
-            <ParametersSection
-              title="Filtri traiettorie"
-              fields={model.FILTER_FIELDS}
-              values={model.filterParams}
-              onChange={model.setFilterParams}
-            />
+            {/* SEZIONE PARAMETRI DINAMICI (US-19) */}
+            <ParamsForm onChange={model.handleParamsChange} />
 
             {/* Pulsante Avvia */}
-            <div className="pt-2">
+            <div className="pt-4">
               <button
                 type="button"
                 onClick={model.start}

@@ -60,8 +60,8 @@ def generate_plots(
     if not results_dir.exists():
         raise FileNotFoundError(f"results_dir not found: {results_dir}")
 
-    active_disc = disc_radius if disc_radius is not None else DISC_RADIUS
-    active_inner = disc_radius if disc_radius is not None else INNER_CIRCLE
+    active_disc = int(disc_radius) if disc_radius is not None else DISC_RADIUS
+    active_inner = int(disc_radius) if disc_radius is not None else INNER_CIRCLE
 
     out_dir.mkdir(parents=True, exist_ok=True)
     results: dict[str, str | None] = {}

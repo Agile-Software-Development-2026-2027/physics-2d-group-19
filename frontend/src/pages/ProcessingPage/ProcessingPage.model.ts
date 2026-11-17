@@ -6,6 +6,15 @@ export type MachineType = 'microscope2d' | 'photonicsLab' | 'lightfield'
 export type InputDataType = 'trajectories' | 'video'
 export type JobStatus = 'queued' | 'tracking' | 'analysis' | 'plots' | 'done' | 'error'
 
+// Response of POST /api/videos
+export type UploadedVideo = {
+  video_id: string
+  filename: string
+  size_bytes: number
+  frames: number
+  fps: number
+}
+
 export const PHASES: Record<string, string> = {
   queued: 'In coda',
   tracking: 'Tracking delle cellule',
@@ -27,6 +36,7 @@ export function useProcessingPageModel(pollMs = 2000) {
   const [kindMachine, setKindMachine] = useState<MachineType>('microscope2d')
 
   const [mainFile, setMainFile] = useState<File | null>(null)
+  const [video, setVideo] = useState<UploadedVideo | null>(null)
   const [illumination, setIllumination] = useState<File | null>(null)
 
   // Dynamic parameters from ParamsForm
@@ -40,7 +50,11 @@ export function useProcessingPageModel(pollMs = 2000) {
   // Derived validations
   const running = status !== null && status !== 'done' && status !== 'error'
   const mainExtension = kindDataInput === 'video' ? '.avi' : '.txt'
-  const mainOk = Boolean(mainFile?.name.toLowerCase().endsWith(mainExtension))
+  // A video is ready once VideoUpload has stored it; trajectories are sent with the job
+  const mainOk =
+    kindDataInput === 'video'
+      ? video !== null
+      : Boolean(mainFile?.name.toLowerCase().endsWith(mainExtension))
   const illuminationName = illumination?.name.toLowerCase() ?? ''
   const illuminationOk = illuminationName.endsWith('.tif') || illuminationName.endsWith('.tiff')
   const canSubmit = Boolean(experiment.trim()) && mainOk && illuminationOk && paramsValid && !running
@@ -51,14 +65,18 @@ export function useProcessingPageModel(pollMs = 2000) {
   }
 
   async function start() {
-    if (!mainFile || !illumination || !paramsValid) return
+    if (!mainOk || !illumination || !paramsValid) return
 
     setError(null)
     setStatus('queued')
     const formData = new FormData()
 
     formData.append('exp_id', experiment.trim())
-    formData.append(kindDataInput, mainFile)
+    if (kindDataInput === 'video') {
+      formData.append('video_id', video!.video_id)
+    } else {
+      formData.append('trajectories', mainFile!)
+    }
     formData.append('illumination', illumination)
     formData.append('machine', kindMachine)
     if (params) {
@@ -108,6 +126,8 @@ export function useProcessingPageModel(pollMs = 2000) {
     setKindMachine,
     mainFile,
     setMainFile,
+    video,
+    setVideo,
     illumination,
     setIllumination,
     handleParamsChange,

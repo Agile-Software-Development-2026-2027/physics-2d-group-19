@@ -130,27 +130,14 @@ export function ProcessingPage({ pollMs = 2000 }) {
           </div>
 
           <div className="space-y-5">
-            {/* File illuminazione */}
-            <div className="flex flex-col gap-1.5 mb-6">
-              <label htmlFor="illumination-file-input" className="text-sm font-semibold text-text cursor-pointer">
-                Carica file Illuminazione (*.tiff | *.tif)
-              </label>
-              <input
-                id="illumination-file-input"
-                type="file"
-                accept=".tif,.tiff"
-                onChange={(e) => model.setIllumination(e.target.files[0] ?? null)}
-                className="block w-full text-sm text-text-muted border border-border rounded-xl bg-bg cursor-pointer file:mr-4 file:py-2.5 file:px-4 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-alga-light file:text-alga hover:file:bg-alga/20 transition-all"
-              />
-              {model.illumination && !model.illuminationOk && (
-                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                  L&apos;illuminazione deve essere .tif o .tiff
-                </p>
-              )}
-            </div>
 
             {/* SEZIONE PARAMETRI DINAMICI (US-19) */}
-            <ParamsForm onChange={model.handleParamsChange} />
+            <ParamsForm
+              kindDataInput={model.kindDataInput}
+              onChange={model.handleParamsChange}
+              onIlluminationChange={model.setIllumination}
+              disabled={model.running}
+            />
 
             {/* GIF delle traiettorie (US-24) */}
             <label className="flex items-center gap-2 text-sm font-semibold text-text cursor-pointer">

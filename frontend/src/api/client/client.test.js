@@ -7,6 +7,7 @@ import {
   setToken,
   getExperiment,
   uploadIllumination,
+  uploadVideo,
   createJob,
   getJob
 } from './client.js'
@@ -15,6 +16,50 @@ afterEach(() => {
   clearToken()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
+})
+
+// Minimal XMLHttpRequest stand-in: send() reports progress and answers with status/body
+function stubXhr(status, body) {
+  const sent = {}
+  class FakeXhr {
+    constructor() {
+      this.upload = {}
+      this.headers = {}
+    }
+    open(method, url) {
+      Object.assign(sent, { method, url })
+    }
+    setRequestHeader(name, value) {
+      this.headers[name] = value
+    }
+    send(form) {
+      Object.assign(sent, { form, headers: this.headers })
+      this.upload.onprogress?.({ lengthComputable: true, loaded: 1, total: 2 })
+      this.status = status
+      this.responseText = JSON.stringify(body)
+      this.onload()
+    }
+  }
+  vi.stubGlobal('XMLHttpRequest', FakeXhr)
+  return sent
+}
+
+it('uploadVideo sends the video as file with the token and reports progress', async () => {
+  const result = { video_id: '0123456789ab', filename: 'a.avi', size_bytes: 5, frames: 30, fps: 10 }
+  const sent = stubXhr(201, result)
+  setToken('jwt')
+  const progress = []
+  expect(await uploadVideo(new File(['video'], 'a.avi'), (f) => progress.push(f))).toEqual(result)
+  expect(sent.method).toBe('POST')
+  expect(sent.url).toContain('/api/videos')
+  expect([...sent.form.keys()]).toEqual(['file'])
+  expect(sent.headers.Authorization).toBe('Bearer jwt')
+  expect(progress).toEqual([0.5])
+})
+
+it('uploadVideo rejects with the HTTP status', async () => {
+  stubXhr(413, { detail: 'The video exceeds the size limit' })
+  await expect(uploadVideo(new File(['video'], 'a.avi'))).rejects.toMatchObject({ status: 413 })
 })
 
 it('uploadIllumination sends the image as file and returns the canonical name', async () => {

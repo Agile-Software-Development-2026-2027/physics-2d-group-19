@@ -92,17 +92,39 @@ export async function uploadIllumination(id, imgFile) {
   return data
 }
 
-export async function uploadVideo(fileVideo) {
+// POST /api/videos -> {video_id, filename, size_bytes, frames, fps}
+// fetch does not report upload progress, so this uses XMLHttpRequest;
+// onProgress receives the fraction sent, from 0 to 1.
+export function uploadVideo(fileVideo, onProgress) {
   const formData = new FormData()
+  formData.append('file', fileVideo)
 
-  formData.append('video', fileVideo)
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${BASE_URL}/api/videos`)
+    const token = getToken()
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
 
-  const data = await apiFetch('/videos', {
-    method: 'POST',
-    body: formData,
+    xhr.upload.onprogress = (e) => {
+      if (onProgress && e.lengthComputable) onProgress(e.loaded / e.total)
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText))
+        return
+      }
+      // Same handling as apiFetchRaw
+      if (xhr.status === 401) {
+        clearToken()
+        window.location.assign('/login?expired=1')
+      }
+      const err = new Error(`HTTP ${xhr.status}`)
+      err.status = xhr.status
+      reject(err)
+    }
+    xhr.onerror = () => reject(new Error('Network error'))
+    xhr.send(formData)
   })
-
-  return data.id
 }
 
 export async function getVideoPreview(id, { frame = 0, diameter, minmass, background_method } = {}) {
@@ -179,6 +201,23 @@ export async function getPlotImageUrl(id, plotName) {
   const imageBlob = await res.blob()
 
   return URL.createObjectURL(imageBlob)
+}
+
+// GET /api/jobs/{job_id}/gif -> get_gif (backend/app/api/gif.py)
+export async function getGifUrl(id) {
+  const res = await apiFetchRaw(`/jobs/${id}/gif`)
+  return URL.createObjectURL(await res.blob())
+}
+
+// GET /api/jobs/{job_id}/gif/frames -> get_frames: {count, concentration, cells_in_ring, frame_indices}
+export async function getGifFrames(id) {
+  return await apiFetch(`/jobs/${id}/gif/frames`)
+}
+
+// GET /api/jobs/{job_id}/gif/frames/{i}.png -> get_frame
+export async function getGifFrameUrl(id, index) {
+  const res = await apiFetchRaw(`/jobs/${id}/gif/frames/${index}.png`)
+  return URL.createObjectURL(await res.blob())
 }
 
 export async function getHistoryElaborations() {

@@ -1,3 +1,4 @@
+import io
 import json
 
 import pytest
@@ -5,8 +6,13 @@ import pytest
 from app.api import jobs
 from app.config import get_settings
 from app.resources import SETTINGS_TXT
+from app.schemas.experiment import ExperimentSettings
+from app.schemas.params import ProcessingParams
 from app.security import create_access_token
+from app.services.experiments_store import save_experiment
+from app.services.job_config import load_config
 from app.services.jobs_store import create_job, job_dir, read_status, write_status
+from app.services.uploads import save_upload
 
 
 @pytest.fixture
@@ -66,7 +72,7 @@ def test_jobs_are_isolated(client, headers, calls):
         ({"trajectories": ("t.txt", b"x")}, {}),
         ({"illumination": ("i.tiff", b"x")}, {}),
         ({**uploads(), "video": ("v.avi", b"x")}, {}),
-        (uploads(), {"exp_id": "50"}),
+        (uploads(), {"exp_id": "999"}),
         (uploads(), {"exp_id": "invalid"}),
     ],
 )
@@ -131,12 +137,124 @@ def test_copy_failure_does_not_start_pipeline(
         assert status["error"] == "disk unavailable"
 
 
-def test_illumination_id_comes_from_settings(client, headers, calls, monkeypatch):
-    settings = jobs.load_settings(SETTINGS_TXT)
-    settings.loc[settings["exps"] == 49, "ill"] = 27
-    monkeypatch.setattr(jobs, "load_settings", lambda path: settings)
+def test_illumination_id_comes_from_settings(client, headers, calls):
+    data_dir = get_settings().data_dir
+    save_experiment(
+        data_dir,
+        ExperimentSettings(exps=49, exp_type=1, ill=27, intensity=180, pix_arr=1.041667),
+    )
     response = client.post("/api/jobs", files=uploads(), headers=headers)
     assert response.status_code == 202
-    inp = job_dir(get_settings().data_dir, response.json()["job_id"]) / "input"
+    inp = job_dir(data_dir, response.json()["job_id"]) / "input"
     assert (inp / "illumination27.tiff").read_bytes() == b"illumination"
     assert not (inp / "illumination14.tiff").exists()
+
+
+def test_create_job_with_registered_experiment_50(client, headers, calls):
+    data_dir = get_settings().data_dir
+    save_experiment(
+        data_dir,
+        ExperimentSettings(exps=50, exp_type=1, ill=20, intensity=150, pix_arr=1.0),
+    )
+    response = client.post("/api/jobs", files=uploads(), data={"exp_id": "50"}, headers=headers)
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    inp = job_dir(data_dir, job_id) / "input"
+    assert (inp / "tAlgae50.txt").read_bytes() == b"trajectories"
+    assert (inp / "illumination20.tiff").read_bytes() == b"illumination"
+    cfg = load_config(data_dir, job_id)
+    assert cfg["experiment"]["exps"] == 50
+
+
+def test_create_job_with_video_id(client, headers, calls):
+    data_dir = get_settings().data_dir
+    video_id = save_upload(data_dir, io.BytesIO(b"video-bytes"), "clip.avi")
+    response = client.post(
+        "/api/jobs",
+        files={"illumination": ("illum.tiff", b"illumination")},
+        data={"exp_id": "49", "video_id": video_id},
+        headers=headers,
+    )
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    inp = job_dir(data_dir, job_id) / "input"
+    assert (inp / "tAlgae49.avi").read_bytes() == b"video-bytes"
+    cfg = load_config(data_dir, job_id)
+    assert cfg["inputs"]["video"] == "clip.avi"
+    assert cfg["inputs"]["video_id"] == video_id
+
+
+@pytest.mark.parametrize("bad_video_id", ["000000000000", "../invalid"])
+def test_create_job_with_unknown_video_id_returns_404(client, headers, calls, bad_video_id):
+    response = client.post(
+        "/api/jobs",
+        files={"illumination": ("illum.tiff", b"illumination")},
+        data={"exp_id": "49", "video_id": bad_video_id},
+        headers=headers,
+    )
+    assert response.status_code == 404
+    assert not (get_settings().data_dir / "jobs").exists()
+    assert calls == []
+
+
+def test_create_job_rejects_video_id_with_trajectories(client, headers, calls):
+    data_dir = get_settings().data_dir
+    video_id = save_upload(data_dir, io.BytesIO(b"video-bytes"), "clip.avi")
+    response = client.post(
+        "/api/jobs",
+        files=uploads("trajectories"),
+        data={"exp_id": "49", "video_id": video_id},
+        headers=headers,
+    )
+    assert response.status_code == 422
+    assert calls == []
+
+
+def test_create_job_with_custom_params_and_make_gif(client, headers, calls):
+    data_dir = get_settings().data_dir
+    params = ProcessingParams()
+    params.tracking.diameter = 7
+    params.analysis.disc_radius = 150
+    response = client.post(
+        "/api/jobs",
+        files=uploads(),
+        data={"exp_id": "49", "params": params.model_dump_json(), "make_gif": "true"},
+        headers=headers,
+    )
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    cfg = load_config(data_dir, job_id)
+    assert cfg["params"]["tracking"]["diameter"] == 7
+    assert cfg["params"]["analysis"]["disc_radius"] == 150
+    assert cfg["make_gif"] is True
+
+
+def test_create_job_with_invalid_params_returns_422(client, headers, calls):
+    response = client.post(
+        "/api/jobs",
+        files=uploads(),
+        data={"exp_id": "49", "params": json.dumps({"tracking": {"diameter": 6}})},
+        headers=headers,
+    )
+    assert response.status_code == 422
+    assert not (get_settings().data_dir / "jobs").exists()
+    assert calls == []
+
+
+def test_create_job_uses_stored_illumination_when_omitted(client, headers, calls):
+    data_dir = get_settings().data_dir
+    ill_dir = data_dir / "experiments" / "illumination"
+    ill_dir.mkdir(parents=True, exist_ok=True)
+    (ill_dir / "illumination14.tiff").write_bytes(b"stored-illum")
+
+    response = client.post(
+        "/api/jobs",
+        files={"trajectories": ("t.txt", b"traj-bytes")},
+        data={"exp_id": "49"},
+        headers=headers,
+    )
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    inp = job_dir(data_dir, job_id) / "input"
+    assert (inp / "illumination14.tiff").read_bytes() == b"stored-illum"
+    assert (inp / "tAlgae49.txt").read_bytes() == b"traj-bytes"

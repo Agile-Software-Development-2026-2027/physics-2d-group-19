@@ -135,7 +135,6 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
   const [defaults, setDefaults] = useState(null)
   const [limits, setLimits] = useState({})
   const [values, setValues] = useState(null)
-  const [errors, setErrors] = useState({})
   const [illumination, setIllumination] = useState(null)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
@@ -143,6 +142,9 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
   const visibleGroups = kindDataInput === 'trajectories'
     ? ['analysis', 'filters']
     : ['tracking', 'analysis', 'filters']
+
+  const errors = values ? validateAll(values, limits, visibleGroups) : {}
+  const isValid = Object.keys(errors).length === 0
 
   const illuminationName = illumination?.name.toLowerCase() ?? ''
   const illuminationOk = illuminationName.endsWith('.tif') || illuminationName.endsWith('.tiff')
@@ -165,8 +167,6 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
         setDefaults(initial)
         setLimits(data.limits ?? {})
         setValues(initial)
-        setErrors({})
-        onChangeRef.current?.(initial, true)
       } catch {
         if (!active) return
         setFetchError('Impossibile caricare i parametri di default dal server.')
@@ -182,11 +182,8 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
 
   useEffect(() => {
     if (!values) return
-    const groups = kindDataInput === 'trajectories' ? ['analysis', 'filters'] : ['tracking', 'analysis', 'filters']
-    const nextErrors = validateAll(values, limits, groups)
-    setErrors(nextErrors)
-    onChangeRef.current?.(values, Object.keys(nextErrors).length === 0)
-  }, [kindDataInput, values, limits])
+    onChangeRef.current?.(values, isValid)
+  }, [values, isValid])
 
   // Parse user input, update local state, run live validation, and notify parent
   function handleFieldChange(group, field, rawValue, fieldType) {
@@ -211,10 +208,6 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
     }
 
     setValues(updated)
-    const nextErrors = validateAll(updated, limits, visibleGroups)
-    setErrors(nextErrors)
-    const isValid = Object.keys(nextErrors).length === 0
-    onChange?.(updated, isValid)
   }
 
   // Restore all parameters back to the laboratory default values
@@ -222,8 +215,6 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
     if (!defaults) return
     const resetValues = cloneParams(defaults)
     setValues(resetValues)
-    setErrors({})
-    onChange?.(resetValues, true)
   }
 
   if (loading) {

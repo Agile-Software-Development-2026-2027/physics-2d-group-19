@@ -202,10 +202,13 @@ const uploadVideoHandler = http.post('/api/videos' , () =>{
     )
 })
 
-const getVideoPreviewHandler = http.get('/api/videos/:id/preview' , ({params}) =>{
-    return HttpResponse.json(
-        {id:params.id , png : '' , cell_count : 42}
-    )
+// 1x1 grey PNG, enough for the <img> of DetectionPreview to show something.
+const PREVIEW_PNG =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNoAAAAggCBd81ytgAAAABJRU5ErkJggg=='
+
+const getVideoPreviewHandler = http.get('/api/videos/:id/preview', ({ request }) => {
+  const frame = Number(new URL(request.url).searchParams.get('frame') ?? 0)
+  return HttpResponse.json({ frame, cell_count: 42, image: PREVIEW_PNG })
 })
 
 const startRunHandler = http.post('/api/runs', () => {

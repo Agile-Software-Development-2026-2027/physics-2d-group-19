@@ -105,13 +105,12 @@ export async function uploadVideo(fileVideo) {
   return data.id
 }
 
-export async function getVideoPreview(id, frame = 0) {
-  const res = await apiFetchRaw(`/videos/${id}/preview?frame=${frame}`)
-
-  const imageBlob = await res.blob()
-  const imageUrl = URL.createObjectURL(imageBlob)
-
-  return imageUrl
+export async function getVideoPreview(id, { frame = 0, diameter, minmass, background_method } = {}) {
+  const query = new URLSearchParams({ frame })
+  if (diameter !== undefined) query.set('diameter', diameter)
+  if (minmass !== undefined) query.set('minmass', minmass)
+  if (background_method) query.set('background_method', background_method)
+  return apiFetch(`/videos/${id}/preview?${query}`)
 }
 
 export async function getDefaultParams() {

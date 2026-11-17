@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { DetectionPreview } from '../../components/DetectionPreview/DetectionPreview.jsx'
 import { ParamsForm } from '../../components/ParamsForm/ParamsForm.jsx'
+import { VideoUpload } from '../../components/VideoUpload/VideoUpload.jsx'
 import { useProcessingPageModel } from './ProcessingPage.model'
 
 export function ProcessingPage({ pollMs = 2000 }) {
@@ -107,27 +108,31 @@ export function ProcessingPage({ pollMs = 2000 }) {
 
           {/* FILE PRINCIPALE */}
           <div className="mb-8 pb-7 border-b border-border">
-            <div className="p-5 rounded-2xl border-2 border-dashed border-alga/40 bg-alga-light/15 hover:border-alga transition-colors space-y-3">
-              <div className="flex items-center justify-between">
-                <label htmlFor="main-file-input" className="text-base font-bold text-text cursor-pointer flex items-center gap-2">
-                  {model.kindDataInput === 'video' ? 'Carica video (*.avi)' : 'Carica traiettoria (*.txt)'}
-                </label>
+            {model.kindDataInput === 'video' ? (
+              <VideoUpload video={model.video} onChange={model.setVideo} />
+            ) : (
+              <div className="p-5 rounded-2xl border-2 border-dashed border-alga/40 bg-alga-light/15 hover:border-alga transition-colors space-y-3">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="main-file-input" className="text-base font-bold text-text cursor-pointer flex items-center gap-2">
+                    Carica traiettoria (*.txt)
+                  </label>
+                </div>
+
+                <input
+                  id="main-file-input"
+                  type="file"
+                  accept={model.mainExtension}
+                  onChange={(e) => model.setMainFile(e.target.files[0] ?? null)}
+                  className="block w-full text-sm text-text-muted border border-border rounded-xl bg-surface cursor-pointer file:mr-4 file:py-3 file:px-5 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-alga file:text-white hover:file:bg-alga-hover transition-all"
+                />
+
+                {model.mainFile && !model.mainOk && (
+                  <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                    Il file deve essere {model.mainExtension}
+                  </p>
+                )}
               </div>
-
-              <input
-                id="main-file-input"
-                type="file"
-                accept={model.mainExtension}
-                onChange={(e) => model.setMainFile(e.target.files[0] ?? null)}
-                className="block w-full text-sm text-text-muted border border-border rounded-xl bg-surface cursor-pointer file:mr-4 file:py-3 file:px-5 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-alga file:text-white hover:file:bg-alga-hover transition-all"
-              />
-
-              {model.mainFile && !model.mainOk && (
-                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                  Il file deve essere {model.mainExtension}
-                </p>
-              )}
-            </div>
+            )}
           </div>
 
           <div className="space-y-5">

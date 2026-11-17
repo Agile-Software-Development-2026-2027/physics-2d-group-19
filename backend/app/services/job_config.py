@@ -25,6 +25,7 @@ def save_config(
     exp: ExperimentSettings,
     params: ProcessingParams,
     inputs: dict,
+    make_gif: bool = False,
 ) -> None:
     """Write config.json for an existing job; unknown job IDs raise KeyError."""
     payload = {
@@ -33,6 +34,7 @@ def save_config(
         "experiment": exp.model_dump(mode="json"),
         "params": params.model_dump(mode="json"),
         "inputs": inputs,
+        "make_gif": make_gif,
     }
     path = _config_path(data_dir, job_id)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")

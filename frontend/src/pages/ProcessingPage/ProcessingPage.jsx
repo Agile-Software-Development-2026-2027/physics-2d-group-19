@@ -152,6 +152,18 @@ export function ProcessingPage({ pollMs = 2000 }) {
             {/* SEZIONE PARAMETRI DINAMICI (US-19) */}
             <ParamsForm onChange={model.handleParamsChange} />
 
+            {/* GIF delle traiettorie (US-24) */}
+            <label className="flex items-center gap-2 text-sm font-semibold text-text cursor-pointer">
+              <input
+                type="checkbox"
+                checked={model.makeGif}
+                onChange={(e) => model.setMakeGif(e.target.checked)}
+                className="w-4 h-4 accent-alga cursor-pointer"
+              />
+              Genera GIF delle traiettorie
+              <span className="font-normal text-text-muted">(richiede più tempo)</span>
+            </label>
+
             {/* Pulsante Avvia */}
             <div className="pt-4">
               <button

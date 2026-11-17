@@ -320,6 +320,34 @@ const downloadPlotHandler = http.get('/api/jobs/:id/plots/:name.png', () =>{
 })
 
 
+// Tiny valid images, so the GIF viewer shows something in development
+const decodeBase64 = (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0))
+const ONE_PIXEL_GIF = decodeBase64('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7')
+const ONE_PIXEL_PNG = decodeBase64(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+)
+
+// GET /api/jobs/{job_id}/gif -> get_gif (backend/app/api/gif.py, 24.2)
+const getGifHandler = http.get('/api/jobs/:id/gif', () => {
+  return new HttpResponse(ONE_PIXEL_GIF, { headers: { 'Content-Type': 'image/gif' } })
+})
+
+// GET /api/jobs/{job_id}/gif/frames -> get_frames: same keys as frames.json (24.1)
+const getGifFramesHandler = http.get('/api/jobs/:id/gif/frames', () => {
+  return HttpResponse.json({
+    count: 6,
+    concentration: [1.0, 1.08, 1.21, 1.35, 1.42, 1.5],
+    cells_in_ring: [12, 13, 15, 17, 18, 19],
+    frame_indices: [0, 10, 20, 30, 40, 50],
+  })
+})
+
+// GET /api/jobs/{job_id}/gif/frames/{i}.png -> get_frame
+const getGifFrameHandler = http.get('/api/jobs/:id/gif/frames/:name.png', () => {
+  return new HttpResponse(ONE_PIXEL_PNG, { headers: { 'Content-Type': 'image/png' } })
+})
+
+
 export const handlers = [
     healthHandler,
     loginHandler , 
@@ -338,6 +366,9 @@ export const handlers = [
     listResultsHandler,
     downloadResultCsvHandler,
     getJobConfigHandler,
+    getGifHandler,
+    getGifFramesHandler,
+    getGifFrameHandler,
     listPlotsHandler,
     downloadPlotHandler,
     createJobHandler,

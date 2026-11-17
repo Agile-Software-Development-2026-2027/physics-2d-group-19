@@ -182,6 +182,23 @@ export async function getPlotImageUrl(id, plotName) {
   return URL.createObjectURL(imageBlob)
 }
 
+// GET /api/jobs/{job_id}/gif -> get_gif (backend/app/api/gif.py)
+export async function getGifUrl(id) {
+  const res = await apiFetchRaw(`/jobs/${id}/gif`)
+  return URL.createObjectURL(await res.blob())
+}
+
+// GET /api/jobs/{job_id}/gif/frames -> get_frames: {count, concentration, cells_in_ring, frame_indices}
+export async function getGifFrames(id) {
+  return await apiFetch(`/jobs/${id}/gif/frames`)
+}
+
+// GET /api/jobs/{job_id}/gif/frames/{i}.png -> get_frame
+export async function getGifFrameUrl(id, index) {
+  const res = await apiFetchRaw(`/jobs/${id}/gif/frames/${index}.png`)
+  return URL.createObjectURL(await res.blob())
+}
+
 export async function getHistoryElaborations() {
   return await apiFetch(`/runs`)
 }

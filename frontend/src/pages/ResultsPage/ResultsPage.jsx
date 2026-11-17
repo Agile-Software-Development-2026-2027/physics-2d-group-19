@@ -7,6 +7,7 @@ import {
   downloadElaborationResultCsv,
   getJobConfig,
 } from '../../api/client/client.js'
+import { GifViewer } from '../../components/GifViewer/GifViewer.jsx'
 import styles from './ResultsPage.module.css'
 
 const TITLES = {
@@ -193,6 +194,8 @@ export function ResultsPage() {
           </div>
         </section>
       )}
+
+      <GifViewer jobId={jobId} />
 
       <button
         type="button"

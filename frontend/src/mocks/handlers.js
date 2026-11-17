@@ -197,7 +197,8 @@ const uploadIlluminationHandler = http.post('/api/experiments/:id/illumination' 
 
 const uploadVideoHandler = http.post('/api/videos' , () =>{
     return HttpResponse.json(
-        {id : 'vid-49', filename : 'tAlgae49.avi' , size_mb : 1800 ,  time_sec : 120},
+        {video_id : '0123456789ab', filename : 'tAlgae49.avi', size_bytes : 1800000000, frames : 1501, fps : 10},
+        { status : 201 },
     )
 })
 

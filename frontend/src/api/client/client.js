@@ -92,17 +92,39 @@ export async function uploadIllumination(id, imgFile) {
   return data
 }
 
-export async function uploadVideo(fileVideo) {
+// POST /api/videos -> {video_id, filename, size_bytes, frames, fps}
+// fetch does not report upload progress, so this uses XMLHttpRequest;
+// onProgress receives the fraction sent, from 0 to 1.
+export function uploadVideo(fileVideo, onProgress) {
   const formData = new FormData()
+  formData.append('file', fileVideo)
 
-  formData.append('video', fileVideo)
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${BASE_URL}/api/videos`)
+    const token = getToken()
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
 
-  const data = await apiFetch('/videos', {
-    method: 'POST',
-    body: formData,
+    xhr.upload.onprogress = (e) => {
+      if (onProgress && e.lengthComputable) onProgress(e.loaded / e.total)
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText))
+        return
+      }
+      // Same handling as apiFetchRaw
+      if (xhr.status === 401) {
+        clearToken()
+        window.location.assign('/login?expired=1')
+      }
+      const err = new Error(`HTTP ${xhr.status}`)
+      err.status = xhr.status
+      reject(err)
+    }
+    xhr.onerror = () => reject(new Error('Network error'))
+    xhr.send(formData)
   })
-
-  return data.id
 }
 
 export async function getVideoPreview(id, frame = 0) {

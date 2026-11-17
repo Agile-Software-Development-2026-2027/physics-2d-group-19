@@ -53,3 +53,43 @@ def test_one_failing_plot_does_not_stop_the_others(results_dir, tmp_path, monkey
         if name != "flux":
             assert result[name] == str(out_dir / f"{name}.png")
             assert (out_dir / f"{name}.png").exists(), f"{name}.png was not produced"
+
+
+def test_generate_plots_uses_custom_disc_radius(results_dir, tmp_path, monkeypatch):
+    from core.analyses import plot_nt_stats as nt_mod
+    from core.analyses import plot_theta_distribution as theta_mod
+
+    seen = {}
+
+    def spy_flux(**kwargs):
+        seen["flux_disc"] = kwargs["disc_radius"]
+
+    def spy_nt(**kwargs):
+        seen["nt_disc"] = kwargs["disc_radius"]
+
+    def spy_theta(**kwargs):
+        seen["theta_inner"] = kwargs["inner_circle"]
+
+    monkeypatch.setattr(flux_mod, "plot_flux", spy_flux)
+    monkeypatch.setattr(nt_mod, "plot_nt_stats", spy_nt)
+    monkeypatch.setattr(theta_mod, "plot_theta_distribution", spy_theta)
+    monkeypatch.setattr(
+        "app.services.plots.JOBS",
+        {
+            k: v
+            for k, v in __import__("app.services.plots", fromlist=["JOBS"]).JOBS.items()
+            if k in {"flux", "nt_stats", "theta_distribution"}
+        },
+    )
+
+    out_dir = tmp_path / "plots"
+    generate_plots(
+        results_dir,
+        FIXTURES / "talgae_settings.txt",
+        FIXTURES,
+        exp_id=49,
+        out_dir=out_dir,
+        disc_radius=150,
+    )
+
+    assert seen == {"flux_disc": 150, "nt_disc": 150, "theta_inner": 150}

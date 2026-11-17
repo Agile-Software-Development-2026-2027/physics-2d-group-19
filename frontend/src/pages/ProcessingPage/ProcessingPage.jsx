@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { DetectionPreview } from '../../components/DetectionPreview/DetectionPreview.jsx'
 import { ParamsForm } from '../../components/ParamsForm/ParamsForm.jsx'
 import { useProcessingPageModel } from './ProcessingPage.model'
 
@@ -148,6 +149,16 @@ export function ProcessingPage({ pollMs = 2000 }) {
                 </p>
               )}
             </div>
+
+            {model.kindDataInput === 'video' && (
+              <DetectionPreview
+                key={model.video?.video_id}
+                videoId={model.video?.video_id}
+                frames={model.video?.frames ?? 0}
+                tracking={model.params?.tracking}
+                paramsValid={model.paramsValid}
+              />
+            )}
 
             {/* SEZIONE PARAMETRI DINAMICI (US-19) */}
             <ParamsForm onChange={model.handleParamsChange} />

@@ -112,6 +112,8 @@ export function useProcessingPageModel(pollMs = 2000) {
     setMainFile,
     illumination,
     setIllumination,
+    params,
+    paramsValid,
     handleParamsChange,
     makeGif,
     setMakeGif,

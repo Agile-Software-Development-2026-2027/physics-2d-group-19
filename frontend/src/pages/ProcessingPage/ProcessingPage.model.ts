@@ -32,6 +32,7 @@ export function useProcessingPageModel(pollMs = 2000) {
   // Dynamic parameters from ParamsForm
   const [params, setParams] = useState<any>(null)
   const [paramsValid, setParamsValid] = useState(true)
+  const [makeGif, setMakeGif] = useState(false)
 
   const [jobId, setJobId] = useState<string | null>(null)
   const [status, setStatus] = useState<JobStatus | null>(null)
@@ -64,6 +65,7 @@ export function useProcessingPageModel(pollMs = 2000) {
     if (params) {
       formData.append('params', JSON.stringify(params))
     }
+    formData.append('make_gif', String(makeGif))
 
     try {
       const job = await createJob(formData)
@@ -111,6 +113,8 @@ export function useProcessingPageModel(pollMs = 2000) {
     illumination,
     setIllumination,
     handleParamsChange,
+    makeGif,
+    setMakeGif,
     status,
     error,
     running,

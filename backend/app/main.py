@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
     auth,
     experiments,
+    gif,
     health,
     history,
     jobs,
@@ -12,6 +13,7 @@ from app.api import (
     preview,
     results,
     upload,
+    videos,
 )
 from app.api.deps import get_current_user
 from app.config import get_settings
@@ -46,7 +48,9 @@ def create_app() -> FastAPI:
         jobs.router,
         plots.router,
         results.router,
+        gif.router,
         history.router,
+        videos.router,
     ]
     for router in protected_routers:
         app.include_router(

@@ -59,27 +59,40 @@ test.skip('enables the button only when all the fields are filled', async () => 
 })
 
 // TEST 2
-// The request must contain the experiment, the main file under the chosen name and the illumination
-test.skip('sends the experiment, the chosen file and the illumination', async () => {
-  const spy = vi
-    .spyOn(globalThis, 'fetch')
-    .mockImplementation(async () =>
-      Response.json({ job_id: 'abc', status: 'queued' }, { status: 202 }),
-    )
+// A video is uploaded first (POST /api/videos) and the job gets only its video_id
+test('uploads the video and starts the job with its video_id', async () => {
+  let jobBody = null
+  server.use(
+    http.post('/api/jobs', async ({ request }) => {
+      jobBody = await request.formData()
+      return HttpResponse.json({ job_id: 'abc', status: 'queued' }, { status: 202 })
+    }),
+  )
   const user = userEvent.setup()
   showProcessingPage()
 
-  // Choose "Video", so the main file must be an .avi sent as "video"
   await user.click(screen.getByLabelText('Video'))
-  await chooseFiles(user, 'tAlgae49.avi')
+  await user.type(screen.getByLabelText('Numero esperimento'), '49')
+  await user.upload(
+    await screen.findByLabelText('Carica file Illuminazione (*.tiff | *.tif)'),
+    new File(['x'], 'illumination14.tiff'),
+  )
+  await user.upload(
+    screen.getByLabelText('Carica video (*.avi)'),
+    new File(['x'], 'tAlgae49.avi'),
+  )
+
+  // The video info from the mock: 1501 frames at 10 fps
+  expect(await screen.findByText('1501')).toBeInTheDocument()
+  expect(screen.getByText('150.1 s')).toBeInTheDocument()
+
   await user.click(screen.getByRole('button', { name: 'Avvia' }))
 
-  expect(screen.getByText('In coda')).toBeInTheDocument()
-  const [url, options] = spy.mock.calls[0]
-  expect(url).toContain('/jobs')
-  expect(options.body.get('exp_id')).toBe('49')
-  expect(options.body.get('video').name).toBe('tAlgae49.avi')
-  expect(options.body.get('illumination').name).toBe('illumination14.tiff')
+  await vi.waitFor(() => expect(jobBody).not.toBeNull())
+  expect(jobBody.get('exp_id')).toBe('49')
+  expect(jobBody.get('video_id')).toBe('0123456789ab')
+  expect(jobBody.get('video')).toBeNull()
+  expect(jobBody.get('illumination')).not.toBeNull()
 })
 
 // TEST 3

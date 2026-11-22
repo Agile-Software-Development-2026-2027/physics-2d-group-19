@@ -455,6 +455,8 @@ export const handlers = [
     getCurrentUserHandler , 
     createExperimentHandler,
     listExperimentsHandler,
+    exportExperimentsHandler,
+    importExperimentsHandler,
     getExperimentHandler,
     saveExperimentHandler,
     getDefaultParamsHandler,
@@ -474,7 +476,5 @@ export const handlers = [
     downloadPlotHandler,
     createJobHandler,
     getJobHandler,
-  exportExperimentsHandler,
-  importExperimentsHandler,
 ]
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getExperiments, saveExperiment } from '../../api/client/client.js'
+import { getExperiments, saveExperiment, exportExperiments, importExperiments } from '../../api/client/client.js'
 
 // Default values populated when initiating a new experiment
 export const DEFAULT_EXPERIMENT = {
@@ -59,6 +59,7 @@ export function useExperimentPageModel() {
   const [errors, setErrors] = useState({})
   const [message, setMessage] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [transferring, setTransferring] = useState(false)
 
   // Fetch list of registered experiments on component mount
   const fetchExperiments = () => {
@@ -100,6 +101,50 @@ export function useExperimentPageModel() {
         delete updated[field]
         return updated
       })
+    }
+  }
+
+  // Import experiments from a legacy Clamidomoni_settings.txt file
+  const handleImport = async (file) => {
+    if (!file) return
+    setTransferring(true)
+    setMessage(null)
+    try {
+      const res = await importExperiments(file)
+      const baseSummary = `Import completed: ${res.created} created, ${res.updated} updated, ${res.skipped_empty} skipped.`
+      const lineErrors =
+        res.errors?.length > 0
+          ? ` Errors on lines: ${res.errors.map((e) => `${e.line} (${e.detail})`).join('; ')}.`
+          : ''
+      setMessage({
+        type: res.errors?.length > 0 ? 'error' : 'success',
+        text: `${baseSummary}${lineErrors}`,
+      })
+      fetchExperiments()
+    } catch (err) {
+      const fallback =
+        err.status === 413
+          ? 'File exceeds the 5 MB size limit.'
+          : 'Failed to import settings file.'
+      setMessage({
+        type: 'error',
+        text: typeof err.detail === 'string' ? err.detail : fallback,
+      })
+    } finally {
+      setTransferring(false)
+    }
+  }
+
+  // Export all registered experiments as Clamidomoni_settings.txt
+  const handleExport = async () => {
+    setTransferring(true)
+    setMessage(null)
+    try {
+      await exportExperiments()
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to export settings file.' })
+    } finally {
+      setTransferring(false)
     }
   }
 
@@ -193,6 +238,7 @@ export function useExperimentPageModel() {
     selectedExpId,
     formData,
     loading,
+    transferring,
     errors,
     message,
     isEditing,
@@ -201,6 +247,8 @@ export function useExperimentPageModel() {
     newExperiment,
     updateField,
     save,
+    handleImport,
+    handleExport,
     goBack: () => navigate('/processing'),
   }
 }

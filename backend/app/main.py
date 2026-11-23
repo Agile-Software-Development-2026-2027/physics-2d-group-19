@@ -12,6 +12,7 @@ from app.api import (
     plots,
     preview,
     results,
+    setups,
     upload,
     videos,
 )
@@ -51,6 +52,7 @@ def create_app() -> FastAPI:
         gif.router,
         history.router,
         videos.router,
+        setups.router,
     ]
     for router in protected_routers:
         app.include_router(

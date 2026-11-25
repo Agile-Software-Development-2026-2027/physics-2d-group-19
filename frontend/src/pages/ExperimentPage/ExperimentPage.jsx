@@ -41,6 +41,7 @@ export function ExperimentPage() {
                   onClick={() => importInputRef.current?.click()}
                   className="px-3.5 py-2 rounded-lg text-sm font-semibold border border-border bg-bg text-text hover:bg-surface disabled:opacity-50 transition-colors cursor-pointer"
                 >
+                    <i className="fa-solid fa-file-import text-alga"></i>
                     Import
                 </button>
                 <button
@@ -49,7 +50,7 @@ export function ExperimentPage() {
                   onClick={model.handleExport}
                   className="px-3.5 py-2 rounded-lg text-sm font-semibold border border-border bg-bg text-text hover:bg-surface disabled:opacity-50 transition-colors cursor-pointer"
                 >
-                    Export
+                    <i class="fa-solid fa-file-export text-alga"></i>                    Export
                 </button>
                 <button
                   type="button"

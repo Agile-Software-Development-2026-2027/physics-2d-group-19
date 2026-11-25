@@ -11,26 +11,26 @@ import { GifViewer } from '../../components/GifViewer/GifViewer.jsx'
 import styles from './ResultsPage.module.css'
 
 const TITLES = {
-  theta_distribution: 'Distribuzione di θ',
-  flux: 'Flusso',
-  density_vs_distance: 'Densità in funzione della distanza',
-  angle_distribution: "Distribuzione dell'angolo",
-  omega_distribution: 'Distribuzione di ω',
+  theta_distribution: 'θ distribution',
+  flux: 'Flux',
+  density_vs_distance: 'Density vs distance',
+  angle_distribution: 'Angle distribution',
+  omega_distribution: 'ω distribution',
   nt_stats: 'N(t)',
-  tumbling_vs_gradient: 'Tumbling rispetto al gradiente',
+  tumbling_vs_gradient: 'Tumbling vs gradient',
   tumbling_duration_vs_distance:
-    'Durata del tumbling in funzione della distanza',
+    'Tumbling duration vs distance',
 }
 
 const PARAM_GROUPS = [
   ['tracking', 'Tracking'],
-  ['analysis', 'Analisi'],
-  ['filters', 'Filtri'],
+  ['analysis', 'Analysis'],
+  ['filters', 'Filters'],
 ]
 
 // true/false/null are not readable as they are
 function formatValue(value) {
-  if (value === true) return 'sì'
+  if (value === true) return 'yes'
   if (value === false) return 'no'
   if (value === null || value === undefined) return '—'
   return String(value)
@@ -74,8 +74,8 @@ export function ResultsPage() {
         if (!active) return
         setMessage(
           err.status === 409
-            ? "L'elaborazione non è ancora finita."
-            : 'Impossibile caricare i grafici.',
+            ? 'The processing has not finished yet.'
+            : 'Could not load the plots.',
         )
       })
 
@@ -88,8 +88,8 @@ export function ResultsPage() {
         if (!active) return
         setMessage(
           err.status === 409
-            ? "L'elaborazione non è ancora finita."
-            : 'Impossibile caricare i file CSV.',
+            ? 'The processing has not finished yet.'
+            : 'Could not load the CSV files.',
         )
       })
 
@@ -113,15 +113,15 @@ export function ResultsPage() {
 
   return (
     <main className={styles.resultsPage}>
-      <h1>Risultati dell'elaborazione</h1>
+      <h1>Processing results</h1>
       <section className={styles.configBox}>
-        <h2>Elaborazione</h2>
+        <h2>Processing</h2>
         {config ? (
           <>
             <p className={styles.configSummary}>
-              Esperimento <strong>{config.experiment.exps}</strong>
+              Experiment <strong>{config.experiment.exps}</strong>
               {' · '}
-              {new Date(config.created_at).toLocaleString('it-IT')}
+              {new Date(config.created_at).toLocaleString('en-GB')}
               {config.inputs.video && ` · video: ${config.inputs.video}`}
             </p>
             <div className={styles.configGroups}>
@@ -144,7 +144,7 @@ export function ResultsPage() {
           </>
         ) : (
           <p className={styles.configMissing}>
-            {configError ? 'Parametri non disponibili.' : 'Caricamento…'}
+            {configError ? 'Parameters not available.' : 'Loading…'}
           </p>
         )}
       </section>
@@ -165,12 +165,12 @@ export function ResultsPage() {
                 <>
                   <img src={src} alt={title} />
                   <a href={src} download={`${plot.name}.png`}>
-                    Scarica
+                    Download
                   </a>
                 </>
               ) : (
                 <p className={styles.plotMissing}>
-                  {plot.url ? 'Caricamento…' : 'Grafico non disponibile'}
+                  {plot.url ? 'Loading…' : 'Plot not available'}
                 </p>
               )}
             </figure>
@@ -179,7 +179,7 @@ export function ResultsPage() {
       </div>
       {results.length > 0 && (
         <section className={styles.resultsSection}>
-          <h2>Dati (CSV)</h2>
+          <h2>Data (CSV)</h2>
           <div className={styles.resultGrid}>
             {results.map((result) => (
               <button
@@ -202,7 +202,7 @@ export function ResultsPage() {
         onClick={() => navigate('/processing')}
         className={`${styles.newJob} px-4 py-2 rounded-lg text-sm font-semibold bg-alga text-white hover:bg-alga-hover transition-colors cursor-pointer`}
       >
-        Nuova elaborazione
+        New processing
       </button>
     </main>
   )

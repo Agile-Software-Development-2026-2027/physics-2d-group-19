@@ -37,7 +37,7 @@ export async function login(username, password) {
     setToken(data.token)
   } else {
     throw new Error(
-      data?.detail || 'Login fallito: token non ricevuto dal server.',
+      data?.detail || 'Login failed: no token received from the server.',
     )
   }
   return data

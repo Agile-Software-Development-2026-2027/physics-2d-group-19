@@ -23,7 +23,7 @@ describe('LogoutButton', () => {
       </MemoryRouter>,
     )
 
-    await user.click(screen.getByRole('button', { name: /esci/i }))
+    await user.click(screen.getByRole('button', { name: /log out/i }))
 
     expect(getToken()).toBeNull()
     expect(screen.getByText('login page')).toBeInTheDocument()

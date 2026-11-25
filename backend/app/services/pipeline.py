@@ -78,6 +78,19 @@ def _read_gif_options(base_dir: Path, settings_txt: Path, exp_id: int) -> dict |
     }
 
 
+def _resolve_video_path(data_dir: Path, job_id: str, input_dir: Path, exp_id: int) -> Path:
+    """Return the local input video if present, otherwise inputs.video_path from config.json."""
+    local_video = input_dir / f"tAlgae{exp_id}.avi"
+    if local_video.exists():
+        return local_video
+    try:
+        config = load_config(data_dir, job_id)
+    except (KeyError, ValueError):
+        return local_video
+    video_path = (config.get("inputs") or {}).get("video_path")
+    return Path(video_path) if video_path else local_video
+
+
 def run_job(data_dir: Path, job_id: str) -> None:
     """Never raises: any error ends in status 'error' with its message."""
     try:
@@ -92,7 +105,7 @@ def run_job(data_dir: Path, job_id: str) -> None:
         params = _load_job_params(data_dir, job_id)
         tracking_cfg, analysis_params, filter_params = to_core(params)
 
-        video_path = input_dir / f"tAlgae{exp_id}.avi"
+        video_path = _resolve_video_path(data_dir, job_id, input_dir, exp_id)
         if video_path.exists():
             write_status(data_dir, job_id, "tracking")
             traj_path = run_tracking(video_path, tracking_dir, tracking_cfg)

@@ -178,3 +178,35 @@ def test_run_job_with_video_passes_custom_tracking_cfg(tmp_path, monkeypatch):
     assert read_status(tmp_path, job_id)["status"] == "done"
     assert captured_tracking["diameter"] == 7
     assert captured_tracking["minmass"] == 250
+
+
+def test_run_job_uses_external_video_path_from_config(tmp_path, monkeypatch):
+    job_id = create_job(tmp_path, 49)
+    base = job_dir(tmp_path, job_id)
+    external_video = tmp_path / "lab" / "tAlgae49.avi"
+    external_video.parent.mkdir()
+    external_video.write_bytes(b"fake-avi")
+
+    config_file = base / "parameters" / "config.json"
+    config_file.write_text(
+        json.dumps({"version": 1, "inputs": {"video_path": str(external_video)}}),
+        encoding="utf-8",
+    )
+
+    seen_video_paths = []
+
+    def fake_tracking(video_path, tracking_dir, cfg):
+        seen_video_paths.append(video_path)
+        return tracking_dir / "tAlgae49.txt"
+
+    monkeypatch.setattr("app.services.pipeline.run_tracking", fake_tracking)
+    monkeypatch.setattr("app.services.pipeline.run_analysis", lambda *a: "outputs")
+    monkeypatch.setattr("app.services.pipeline.save_legacy_txt", lambda *a: [])
+    monkeypatch.setattr("app.services.pipeline.save_csv", lambda *a: [])
+    monkeypatch.setattr("app.services.pipeline.generate_plots", lambda *a, **kw: {})
+
+    run_job(tmp_path, job_id)
+
+    assert read_status(tmp_path, job_id)["status"] == "done"
+    assert seen_video_paths == [external_video]
+    assert not (base / "input" / "tAlgae49.avi").exists()

@@ -9,6 +9,7 @@ from app.resources import SETTINGS_TXT
 from app.schemas.experiment import ExperimentSettings
 from app.schemas.params import ProcessingParams
 from app.security import create_access_token
+from app.services import job_factory
 from app.services.experiments_store import save_experiment
 from app.services.job_config import load_config
 from app.services.jobs_store import create_job, job_dir, read_status, write_status
@@ -122,9 +123,9 @@ def test_copy_failure_does_not_start_pipeline(
     def fail(*args, **kwargs):
         raise OSError("disk unavailable")
 
-    monkeypatch.setattr(jobs.shutil, operation, fail)
+    monkeypatch.setattr(job_factory.shutil, operation, fail)
     if status_fails:
-        monkeypatch.setattr(jobs, "write_status", fail)
+        monkeypatch.setattr(job_factory, "write_status", fail)
     response = client.post("/api/jobs", files=uploads(), headers=headers)
     assert response.status_code == 500
     assert response.json() == {"detail": "Could not save job input"}

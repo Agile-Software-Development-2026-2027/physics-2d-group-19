@@ -3,7 +3,7 @@ import { Header } from '../components/Header/Header.jsx'
 
 export function MainLayout({ backendStatus }) {
   const statusLabel =backendStatus === 'checking'
-    ? 'Verifica...'
+    ? 'Checking…'
     : `Backend: ${backendStatus}`
 
   return (

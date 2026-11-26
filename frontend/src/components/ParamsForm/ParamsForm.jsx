@@ -4,8 +4,8 @@ import { getDefaultParams } from '../../api/client/client.js'
 // Section titles displayed in the UI for each parameter group
 const GROUP_TITLES = {
   tracking: 'Tracking',
-  analysis: 'Analisi',
-  filters: 'Filtri',
+  analysis: 'Analysis',
+  filters: 'Filters',
 }
 
 // Physical units appended to field labels where applicable
@@ -75,33 +75,33 @@ function validateField(group, name, value, fieldLimit = {}) {
   }
 
   if (value === '' || value === null || Number.isNaN(Number(value))) {
-    return 'Inserisci un valore numerico valido'
+    return 'Enter a valid number'
   }
 
   const num = Number(value)
 
   if (INTEGER_FIELDS.has(name) && !Number.isInteger(num)) {
-    return 'Deve essere un numero intero'
+    return 'Must be an integer'
   }
 
   if (fieldLimit.minimum !== undefined && num < fieldLimit.minimum) {
-    return `Il valore deve essere almeno ${fieldLimit.minimum}`
+    return `Must be at least ${fieldLimit.minimum}`
   }
 
   if (fieldLimit.exclusiveMinimum !== undefined && num <= fieldLimit.exclusiveMinimum) {
-    return `Il valore deve essere maggiore di ${fieldLimit.exclusiveMinimum}`
+    return `Must be greater than ${fieldLimit.exclusiveMinimum}`
   }
 
   if (fieldLimit.maximum !== undefined && num > fieldLimit.maximum) {
-    return `Il valore deve essere al massimo ${fieldLimit.maximum}`
+    return `Must be at most ${fieldLimit.maximum}`
   }
 
   if (fieldLimit.exclusiveMaximum !== undefined && num >= fieldLimit.exclusiveMaximum) {
-    return `Il valore deve essere minore di ${fieldLimit.exclusiveMaximum}`
+    return `Must be less than ${fieldLimit.exclusiveMaximum}`
   }
 
   if (group === 'tracking' && name === 'diameter' && num % 2 === 0) {
-    return 'Il diametro deve essere un numero dispari (es. 3, 5, 7)'
+    return 'The diameter must be an odd number (e.g. 3, 5, 7)'
   }
 
   return null
@@ -169,7 +169,7 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
         setValues(initial)
       } catch {
         if (!active) return
-        setFetchError('Impossibile caricare i parametri di default dal server.')
+        setFetchError('Could not load the default parameters from the server.')
       } finally {
         if (active) setLoading(false)
       }
@@ -220,7 +220,7 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
   if (loading) {
     return (
       <div className="p-4 rounded-xl border border-border bg-bg/50 text-sm text-text-muted animate-pulse">
-        Caricamento parametri...
+        Loading parameters…
       </div>
     )
   }
@@ -242,7 +242,7 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <p className="text-xs text-text-muted">
-          Parametri dell'esperimento.
+          Experiment parameters.
         </p>
         <button
           type="button"
@@ -250,14 +250,14 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
           disabled={disabled}
           className="shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-border bg-bg text-text hover:bg-alga-light hover:text-alga hover:border-alga/40 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Ripristina default
+          Reset to defaults
         </button>
       </div>
 
       {/* File illuminazione */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="illumination-file-input" className="text-sm font-semibold text-text cursor-pointer">
-          Carica file Illuminazione (*.tiff | *.tif)
+          Upload illumination file (*.tiff | *.tif)
         </label>
         <input
           id="illumination-file-input"
@@ -273,7 +273,7 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
         />
         {illumination && !illuminationOk && (
           <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-            L&apos;illuminazione deve essere .tif o .tiff
+            The illumination file must be .tif or .tiff
           </p>
         )}
       </div>
@@ -398,4 +398,4 @@ export function ParamsForm({ onChange, onIlluminationChange, kindDataInput = 'vi
       ))}
     </div>
   )
-}
+}

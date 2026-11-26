@@ -26,13 +26,13 @@ function showProcessingPage() {
 
 // Write the experiment number and choose the main file and the illumination image
 async function chooseFiles(user, mainFile = 'tAlgae49.txt') {
-  await user.type(screen.getByLabelText('Numero esperimento'), '49')
+  await user.type(screen.getByLabelText('Experiment number'), '49')
   await user.upload(
-    screen.getByLabelText('Video o traiettorie'),
+    screen.getByLabelText('Video or trajectories'),
     new File(['x'], mainFile),
   )
   await user.upload(
-    screen.getByLabelText('Illuminazione'),
+    screen.getByLabelText('Illumination'),
     new File(['x'], 'illumination14.tiff'),
   )
 }
@@ -42,17 +42,17 @@ async function chooseFiles(user, mainFile = 'tAlgae49.txt') {
 test.skip('enables the button only when all the fields are filled', async () => {
   const user = userEvent.setup()
   showProcessingPage()
-  const button = screen.getByRole('button', { name: 'Avvia' })
+  const button = screen.getByRole('button', { name: 'Start' })
 
   expect(button).toBeDisabled()
-  await user.type(screen.getByLabelText('Numero esperimento'), '49')
+  await user.type(screen.getByLabelText('Experiment number'), '49')
   await user.upload(
-    screen.getByLabelText('Video o traiettorie'),
+    screen.getByLabelText('Video or trajectories'),
     new File(['x'], 'tAlgae49.txt'),
   )
   expect(button).toBeDisabled()
   await user.upload(
-    screen.getByLabelText('Illuminazione'),
+    screen.getByLabelText('Illumination'),
     new File(['x'], 'illumination14.tiff'),
   )
   expect(button).toBeEnabled()
@@ -72,9 +72,9 @@ test.skip('sends the experiment, the chosen file and the illumination', async ()
   // Choose "Video", so the main file must be an .avi sent as "video"
   await user.click(screen.getByLabelText('Video'))
   await chooseFiles(user, 'tAlgae49.avi')
-  await user.click(screen.getByRole('button', { name: 'Avvia' }))
+  await user.click(screen.getByRole('button', { name: 'Start' }))
 
-  expect(screen.getByText('In coda')).toBeInTheDocument()
+  expect(screen.getByText('Queued')).toBeInTheDocument()
   const [url, options] = spy.mock.calls[0]
   expect(url).toContain('/jobs')
   expect(options.body.get('exp_id')).toBe('49')
@@ -89,9 +89,9 @@ test.skip('shows the phase and opens the results when the job is done', async ()
   showProcessingPage()
 
   await chooseFiles(user)
-  await user.click(screen.getByRole('button', { name: 'Avvia' }))
+  await user.click(screen.getByRole('button', { name: 'Start' }))
 
-  expect(await screen.findByText('Analisi')).toBeInTheDocument()
+  expect(await screen.findByText('Analysis')).toBeInTheDocument()
   expect(await screen.findByText('Results page')).toBeInTheDocument()
 })
 
@@ -112,10 +112,10 @@ test.skip('shows the error of a failed job', async () => {
   showProcessingPage()
 
   await chooseFiles(user)
-  await user.click(screen.getByRole('button', { name: 'Avvia' }))
+  await user.click(screen.getByRole('button', { name: 'Start' }))
 
   expect(await screen.findByText('No trajectories to analyse')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Avvia' })).toBeEnabled()
+  expect(screen.getByRole('button', { name: 'Start' })).toBeEnabled()
 })
 
 // TEST 5
@@ -125,16 +125,16 @@ test.skip('keeps the file and checks it again when the kind changes', async () =
   showProcessingPage()
 
   await chooseFiles(user)
-  const button = screen.getByRole('button', { name: 'Avvia' })
+  const button = screen.getByRole('button', { name: 'Start' })
   expect(button).toBeEnabled()
 
   // A .txt file is not a video
   await user.click(screen.getByLabelText('Video'))
-  expect(screen.getByText('Il file deve essere .avi')).toBeInTheDocument()
+  expect(screen.getByText('The file must be .avi')).toBeInTheDocument()
   expect(button).toBeDisabled()
 
   // Back to trajectories: the same file is valid again
-  await user.click(screen.getByLabelText('Traiettorie'))
-  expect(screen.queryByText('Il file deve essere .avi')).not.toBeInTheDocument()
+  await user.click(screen.getByLabelText('Trajectories'))
+  expect(screen.queryByText('The file must be .avi')).not.toBeInTheDocument()
   expect(button).toBeEnabled()
 })

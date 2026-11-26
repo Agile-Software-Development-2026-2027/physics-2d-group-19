@@ -31,7 +31,7 @@ export function DetectionPreview({ videoId, frames, tracking, paramsValid = true
         })
         if (active) setPreview(data)
       } catch {
-        if (active) setError("Impossibile calcolare l'anteprima.")
+        if (active) setError("Could not compute the preview.")
       } finally {
         if (active) setLoading(false)
       }
@@ -45,7 +45,7 @@ export function DetectionPreview({ videoId, frames, tracking, paramsValid = true
   }, [videoId, frame, diameter, minmass, backgroundMethod, paramsValid])
 
   if (!videoId) {
-    return <p className="text-sm text-text-muted">Carica un video per vedere l&apos;anteprima.</p>
+    return <p className="text-sm text-text-muted">Upload a video to see the preview.</p>
   }
 
     return (
@@ -55,18 +55,18 @@ export function DetectionPreview({ videoId, frames, tracking, paramsValid = true
           <figure className="space-y-2">
             <img
               src={preview.image}
-              alt={`Cellule rilevate nel frame ${preview.frame}`}
+              alt={`Cells detected in frame ${preview.frame}`}
               className="w-full rounded-xl border border-border"
             />
             <figcaption className="text-sm font-semibold text-text">
-              {preview.cell_count} cellule rilevate
+              {preview.cell_count} cells detected
             </figcaption>
           </figure>
         )}
 
         <div className="space-y-1">
           <label htmlFor="preview-frame" className="text-sm font-semibold text-text">
-            Frame {frame} di {frames - 1}
+            Frame {frame} of {frames - 1}
           </label>
           <input
             id="preview-frame"
@@ -82,13 +82,13 @@ export function DetectionPreview({ videoId, frames, tracking, paramsValid = true
 
       {!paramsValid && (
         <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-          Correggi i parametri per aggiornare l&apos;anteprima.
+          Fix the parameters to update the preview.
         </p>
       )}
 
       {loading && (
         <p role="status" className="text-sm text-text-muted animate-pulse">
-          Calcolo dell&apos;anteprima...
+          Computing the preview…
         </p>
       )}
 
@@ -99,7 +99,7 @@ export function DetectionPreview({ videoId, frames, tracking, paramsValid = true
       )}
 
       <p className="text-xs text-text-muted">
-        L&apos;anteprima usa uno sfondo stimato, il risultato finale può differire leggermente.
+        The preview uses an estimated background, so the final result may differ slightly.
       </p>
     </div>
   )

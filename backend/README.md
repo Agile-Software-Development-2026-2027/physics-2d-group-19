@@ -48,6 +48,29 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 Keep `.env` local; it is ignored by Git. The committed `.env.example` contains only a
 placeholder, never a real signing secret.
 
+## Lab folders (PHYSTUFF2D-150, 30.1)
+
+On the lab workstation the app can find an experiment's files by its number instead of
+asking for an upload. The folders are set with three optional variables, read by
+`app.config.Settings`:
+
+| Variable | Setting | Contains |
+| --- | --- | --- |
+| `APP_VIDEO_DIR` | `video_dir` | videos, e.g. `tAlgae49.avi` |
+| `APP_TRAJECTORIES_DIR` | `trajectories_dir` | trajectories, e.g. `tAlgae49.txt` |
+| `APP_ILLUMINATION_DIR` | `illumination_dir` | illumination images, e.g. `illumination14.tiff` |
+
+Each defaults to `None` (not configured): nothing is looked up there. In the lab they can
+all point to the same folder, for example in `backend/.env`:
+
+```bash
+APP_VIDEO_DIR=/home/<user>/nas_public/tAlgae_exp/
+APP_TRAJECTORIES_DIR=/home/<user>/nas_public/tAlgae_exp/
+APP_ILLUMINATION_DIR=/home/<user>/nas_public/tAlgae_exp/
+```
+
+Leave a variable unset rather than empty: an empty value is read as the current folder.
+
 ## Pre-job upload storage (PHYSTUFF2D-130)
 
 `app.services.uploads` saves opaque bytes independently of jobs:

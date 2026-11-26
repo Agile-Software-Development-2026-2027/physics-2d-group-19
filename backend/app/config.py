@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 480
     # Largest video accepted by POST /api/videos (3 GB, to confirm with the lab).
     max_video_bytes: int = 3 * 1024**3
+    # Lab folders on the workstation, searched by experiment number (US-30).
+    # None means the folder is not configured and nothing is looked up there.
+    video_dir: Path | None = None
+    trajectories_dir: Path | None = None
+    illumination_dir: Path | None = None
 
 
 @lru_cache

@@ -2,10 +2,6 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-# Core analysis pipeline modules and data structures
-from core.clam_pipeline.analyze import AnalysisParams, FilterParams, analyze_experiment
-# I/O utilities to read raw settings and trajectory tracking files
-from core.clam_pipeline.io import load_settings, load_trajectories_txt
 # Custom test assertion helper to compare Pandas DataFrames with numeric tolerance
 from tests.helpers.compare import assert_tables_close
 
@@ -48,54 +44,15 @@ def _load_fixture_table(base_path: Path, columns: list[str]) -> pd.DataFrame:
 
 
 @pytest.fixture(scope="module")
-def exp49_analysis_results():
+def exp49_analysis_results(exp49_outputs):
     """
-    Runs the core experiment analysis pipeline once for the entire test module
-    This caches the computation across all regression tests to improve test speed
+    Core analysis of experiment 49, shared with the whole test session (see conftest.py).
+
+    It uses the lab parameters of app/resources, the same ones the legacy reference was
+    produced with: radial_map=False, dt=0.1, tumbling_threshold=5.0, disc_radius=350,
+    and all trajectory filters at their neutral values.
     """
-    # Load experiment-level settings and metadata
-    settings_df = load_settings(FIXTURES_DIR / "talgae_settings.txt")
-    settings_row = settings_df.loc[settings_df["exps"] == 49].iloc[0]
-    
-    # Load tracked particle coordinates/trajectories
-    traj_df = load_trajectories_txt(FIXTURES_DIR / "tAlgae49.txt")
-
-    # Configure analysis physical and geometric parameters
-    params = AnalysisParams(
-        radial_map=False,           # Disable radial intensity re-mapping
-        dt=0.1,                     # Time step between frames in seconds
-        tumbling_threshold=5.0,     # Angular threshold to detect tumbling events
-        disc_radius=350,            # ROI / light disc radius in pixels or micrometers
-        diam=10,                    # Approximate cell/swimmer diameter
-        particle_show=5,            # Particle identifier for debug/visualization tracking
-        flux_cg_in=1,               # Coarse-graining window inside the disc for flux calculation
-        flux_cg_out=150,            # Coarse-graining window outside the disc for flux calculation
-        nskip=1,                    # Frame downsampling step (1 = process every frame)
-    )
-    # Trajectory filter thresholds: all set to 0/neutral to match raw legacy output
-    fparams = FilterParams(
-        lifetime_min=0,             # Minimum trajectory duration required
-        threshold_dist=0,           # Minimum displacement threshold
-        threshold_dist_tot=0,       # Minimum total path length
-        dist_step=1,                # Displacement calculation step size
-        strict=True,                # Enforce boundary checks
-        only_inside=True,           # Retain trajectories confined within the region
-        blinking_ratio=0.0,         # Maximum allowed missing-frame (blinking) ratio
-        blinking_tolerance=0.0,     # Tolerance window for frame gaps
-        long_track_min_snaps=0,     # Minimum snapshots required for long tracks
-    )
-
-    # Run the core pipeline on experiment 49
-    out = analyze_experiment(
-        exp_id=49,
-        settings_row=settings_row,
-        traj_df=traj_df,
-        illum_dir=FIXTURES_DIR,
-        radial_dir=FIXTURES_DIR,
-        params=params,
-        fparams=fparams,
-    )
-    return out
+    return exp49_outputs
 
 
 # Regression test cases

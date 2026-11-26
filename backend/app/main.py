@@ -10,6 +10,7 @@ from app.api import (
     jobs,
     params,
     plots,
+    precheck,
     preview,
     results,
     setups,
@@ -46,6 +47,8 @@ def create_app() -> FastAPI:
         upload.router,
         preview.router,
         params.router,
+        # Before jobs.router: /jobs/precheck is a fixed path under /jobs.
+        precheck.router,
         jobs.router,
         plots.router,
         results.router,

@@ -26,20 +26,20 @@ describe('Header', () => {
     sessionStorage.clear()
   })
 
-  it('da loggato mostra il nome dell’utente e «Esci»', async () => {
+  it('da loggato mostra il nome dell’utente e «Log out»', async () => {
     setToken('abc')
     renderHeader('/elaborazione')
 
     // il nome arriva dal mock MSW di /api/auth/me
     expect(await screen.findByText('operator')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /esci/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /log out/i })).toBeInTheDocument()
   })
 
-  it('senza token non mostra né il nome né «Esci»', () => {
+  it('senza token non mostra né il nome né «Log out»', () => {
     renderHeader('/login')
 
     expect(
-      screen.queryByRole('button', { name: /esci/i }),
+      screen.queryByRole('button', { name: /log out/i }),
     ).not.toBeInTheDocument()
     expect(screen.queryByText('operator')).not.toBeInTheDocument()
   })
@@ -50,7 +50,7 @@ describe('Header', () => {
     expect(screen.getByText('Backend: ok')).toBeInTheDocument()
   })
 
-  it('se /api/auth/me fallisce mostra «Esci» senza nome', async () => {
+  it('se /api/auth/me fallisce mostra «Log out» senza nome', async () => {
     server.use(
       http.get('/api/auth/me', () => HttpResponse.json({}, { status: 401 })),
     )
@@ -58,22 +58,22 @@ describe('Header', () => {
     renderHeader('/elaborazione')
 
     expect(
-      await screen.findByRole('button', { name: /esci/i }),
+      await screen.findByRole('button', { name: /log out/i }),
     ).toBeInTheDocument()
     expect(screen.queryByText('operator')).not.toBeInTheDocument()
   })
 
-  it('premendo «Esci» porta al login e nasconde nome e pulsante', async () => {
+  it('premendo «Log out» porta al login e nasconde nome e pulsante', async () => {
     setToken('abc')
     const user = userEvent.setup()
     renderHeader('/elaborazione')
 
     await screen.findByText('operator')
-    await user.click(screen.getByRole('button', { name: /esci/i }))
+    await user.click(screen.getByRole('button', { name: /log out/i }))
 
     expect(screen.getByText('login page')).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /esci/i }),
+      screen.queryByRole('button', { name: /log out/i }),
     ).not.toBeInTheDocument()
     expect(screen.queryByText('operator')).not.toBeInTheDocument()
   })

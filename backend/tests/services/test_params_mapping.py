@@ -1,6 +1,8 @@
 from dataclasses import asdict
 from pathlib import Path
 
+import pandas as pd
+
 from app.resources import ANALYSIS_PARAMS, FILTER_PARAMS, TRACKING_CONFIG_JSON
 from app.schemas.params import AnalysisParams, FilterParams, ProcessingParams, TrackingParams
 from app.services.analysis import run_analysis
@@ -8,8 +10,6 @@ from app.services.params_mapping import to_core
 from core.clam_pipeline.analyze import AnalysisParams as CoreAnalysisParams
 from core.clam_pipeline.analyze import FilterParams as CoreFilterParams
 from core.tracking_core import TrackingConfig, load_config_json
-from tests.core.test_regression_analysis import ATOL_LEGACY, RTOL_LEGACY, _load_fixture_table
-from tests.helpers.compare import assert_tables_close
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "exp49"
 
@@ -72,12 +72,30 @@ def test_to_core_custom_values_are_mapped():
     assert filter_params.blinking_ratio == 0.8
 
 
-# Integration check: core analysis produces regression-exact outputs with mapped objects
-def test_run_analysis_with_converted_core_params():
-    # Pass explicit mapped parameters to run_analysis
-    _, core_params, core_fparams = to_core(ProcessingParams())
+def _spy_core_analysis(monkeypatch) -> dict:
+    """Replace the core analysis with a spy: the real one runs once in conftest.py.
 
-    out = run_analysis(
+    The trajectory file of experiment 49 is large, so a one-row table is read instead.
+    """
+    seen = {}
+    one_row = pd.DataFrame({"frame": [0], "y": [0.0], "x": [0.0], "particle": [0]})
+    monkeypatch.setattr("app.services.analysis.load_trajectories_txt", lambda _: one_row)
+
+    def fake_analyze_experiment(**kwargs):
+        seen.update(kwargs)
+
+    monkeypatch.setattr("app.services.analysis.analyze_experiment", fake_analyze_experiment)
+    return seen
+
+
+# The mapped parameters reach the core unchanged. They equal the lab defaults
+# (test_to_core_defaults_match_lab_resources), and the defaults give the lab results
+# (tests/services/test_analysis.py::test_same_angle_as_lab).
+def test_run_analysis_with_converted_core_params(monkeypatch):
+    _, core_params, core_fparams = to_core(ProcessingParams())
+    seen = _spy_core_analysis(monkeypatch)
+
+    run_analysis(
         49,
         FIXTURES_DIR / "talgae_settings.txt",
         FIXTURES_DIR / "tAlgae49.txt",
@@ -86,18 +104,20 @@ def test_run_analysis_with_converted_core_params():
         fparams=core_fparams,
     )
 
-    # Verify angle distribution metrics against confirmed laboratory reference fixture
-    expected = _load_fixture_table(FIXTURES_DIR / "angle_exp49", ["angle", "dist", "v"])
-    assert_tables_close(out.angle, expected, rtol=RTOL_LEGACY, atol=ATOL_LEGACY)
+    assert seen["params"] is core_params
+    assert seen["fparams"] is core_fparams
 
 
-# Verify when params and fparams are omitted
-def test_run_analysis_default_fallback():
-    out = run_analysis(
+# Verify when params and fparams are omitted: the lab defaults are used
+def test_run_analysis_default_fallback(monkeypatch):
+    seen = _spy_core_analysis(monkeypatch)
+
+    run_analysis(
         49, FIXTURES_DIR / "talgae_settings.txt", FIXTURES_DIR / "tAlgae49.txt", FIXTURES_DIR
     )
-    expected = _load_fixture_table(FIXTURES_DIR / "angle_exp49", ["angle", "dist", "v"])
-    assert_tables_close(out.angle, expected, rtol=RTOL_LEGACY, atol=ATOL_LEGACY)
+
+    assert seen["params"] is ANALYSIS_PARAMS
+    assert seen["fparams"] is FILTER_PARAMS
 
 
 # Verify that optional memory field set to None is preserved during mapping

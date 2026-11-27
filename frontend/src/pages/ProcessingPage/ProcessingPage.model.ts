@@ -7,10 +7,10 @@ export type InputDataType = 'trajectories' | 'video'
 export type JobStatus = 'queued' | 'tracking' | 'analysis' | 'plots' | 'done' | 'error'
 
 export const PHASES: Record<string, string> = {
-  queued: 'In coda',
-  tracking: 'Tracking delle cellule',
-  analysis: 'Analisi',
-  plots: 'Creazione dei grafici',
+  queued: 'Queued',
+  tracking: 'Tracking the cells',
+  analysis: 'Analysis',
+  plots: 'Creating the plots',
 }
 
 export const MACHINES: { id: MachineType; label: string }[] = [
@@ -72,7 +72,7 @@ export function useProcessingPageModel(pollMs = 2000) {
       setJobId(job.job_id)
     } catch {
       setStatus(null)
-      setError("Impossibile avviare l'elaborazione.")
+      setError("Could not start the processing.")
     }
   }
 
@@ -92,7 +92,7 @@ export function useProcessingPageModel(pollMs = 2000) {
       } catch {
         clearInterval(timer)
         setStatus('error')
-        setError("Stato dell'elaborazione non disponibile.")
+        setError("Processing status not available.")
       }
     }, pollMs)
 

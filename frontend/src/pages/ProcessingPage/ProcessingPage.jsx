@@ -11,7 +11,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
 
       {/* 1. SELETTORE MACCHINA */}
       <fieldset className="space-y-1.5">
-        <legend className="text-sm font-semibold text-text">Seleziona Macchina utilizzata</legend>
+        <legend className="text-sm font-semibold text-text">Select the microscope used</legend>
         <div className="inline-flex p-1 bg-bg border border-border rounded-xl w-full">
           {model.MACHINES.map(({ id, label }) => (
             <label
@@ -40,7 +40,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
 
         {/* 2. SELETTORE TIPO INPUT ANALISI */}
         <fieldset className="space-y-1.5">
-          <legend className="text-sm font-semibold text-text">Cosa vuoi analizzare?</legend>
+          <legend className="text-sm font-semibold text-text">What do you want to analyse?</legend>
           <div className="inline-flex p-1 bg-bg border border-border rounded-xl w-full">
             <label
               className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer ${
@@ -56,7 +56,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
                 onChange={() => model.setKindDataInput('trajectories')}
                 className="sr-only"
               />
-              Traiettorie
+              Trajectories
             </label>
 
             <label
@@ -82,20 +82,20 @@ export function ProcessingPage({ pollMs = 2000 }) {
         <div className="relative space-y-2">
           <div className="flex justify-between items-center">
             <label htmlFor="experiment-input" className="text-sm font-semibold text-text">
-              Numero esperimento
+              Experiment number
             </label>
             <Link
               to="/esperimento"
               className="text-xs font-semibold text-alga hover:underline flex items-center gap-1"
             >
-              Gestisci esperimenti →
+              Manage experiments →
             </Link>
           </div>
 
           <input
             id="experiment-input"
             type="text"
-            placeholder="Es. 49"
+            placeholder="E.g. 49"
             value={model.experiment}
             onChange={(e) => model.setExperiment(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg text-text font-normal focus:outline-none focus:ring-2 focus:ring-alga/50 focus:border-alga transition-all"
@@ -110,7 +110,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
             <div className="p-5 rounded-2xl border-2 border-dashed border-alga/40 bg-alga-light/15 hover:border-alga transition-colors space-y-3">
               <div className="flex items-center justify-between">
                 <label htmlFor="main-file-input" className="text-base font-bold text-text cursor-pointer flex items-center gap-2">
-                  {model.kindDataInput === 'video' ? 'Carica video (*.avi)' : 'Carica traiettoria (*.txt)'}
+                  {model.kindDataInput === 'video' ? 'Upload video (*.avi)' : 'Upload trajectories (*.txt)'}
                 </label>
               </div>
 
@@ -124,7 +124,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
 
               {model.mainFile && !model.mainOk && (
                 <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                  Il file deve essere {model.mainExtension}
+                  The file must be {model.mainExtension}
                 </p>
               )}
             </div>
@@ -158,8 +158,8 @@ export function ProcessingPage({ pollMs = 2000 }) {
                 onChange={(e) => model.setMakeGif(e.target.checked)}
                 className="w-4 h-4 accent-alga cursor-pointer"
               />
-              Genera GIF delle traiettorie
-              <span className="font-normal text-text-muted">(richiede più tempo)</span>
+              Generate trajectory GIF
+              <span className="font-normal text-text-muted">(takes longer)</span>
             </label>
 
             {/* Pulsante Avvia */}
@@ -173,7 +173,7 @@ export function ProcessingPage({ pollMs = 2000 }) {
                 {model.running && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 )}
-                Avvia
+                Start
               </button>
             </div>
 

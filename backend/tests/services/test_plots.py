@@ -2,6 +2,7 @@ import gzip
 import shutil
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 
 from app.services.plots import PLOT_NAMES, generate_plots
@@ -37,10 +38,16 @@ def test_generate_plots_generate_all_pngs(results_dir, tmp_path):
 
 
 def test_one_failing_plot_does_not_stop_the_others(results_dir, tmp_path, monkeypatch):
-    def broken_plot(**kwargs):
+    # Quick fake plots: the real ones are drawn once in test_generate_plots_generate_all_pngs.
+    def quick_plot(*args):
+        plt.figure()
+        plt.plot([0, 1])
+
+    def broken_plot(*args):
         raise RuntimeError("simulated failure")
 
-    monkeypatch.setattr(flux_mod, "plot_flux", broken_plot)
+    fake_jobs = {name: broken_plot if name == "flux" else quick_plot for name in PLOT_NAMES}
+    monkeypatch.setattr("app.services.plots.JOBS", fake_jobs)
     out_dir = tmp_path / "plots"
 
     result = generate_plots(

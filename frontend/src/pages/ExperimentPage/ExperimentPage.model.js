@@ -66,7 +66,7 @@ export function useExperimentPageModel() {
     getExperiments()
       .then((data) => setExperiments(data || []))
       .catch(() =>
-        setMessage({ type: 'error', text: 'Impossibile caricare gli esperimenti.' }),
+        setMessage({ type: 'error', text: 'Could not load the experiments.' }),
       )
   }
 
@@ -156,20 +156,20 @@ export function useExperimentPageModel() {
       Number(formData.exps) < 0 ||
       !Number.isInteger(Number(formData.exps))
     ) {
-      newErrors.exps = "Inserire un numero d'esperimento valido (intero >= 0)"
+      newErrors.exps = 'Enter a valid experiment number (integer >= 0)'
     }
     if (
       formData.ill === '' ||
       Number(formData.ill) < 0 ||
       !Number.isInteger(Number(formData.ill))
     ) {
-      newErrors.ill = "Il numero d'illuminazione deve essere un intero >= 0"
+      newErrors.ill = 'The illumination number must be an integer >= 0'
     }
     if (formData.intensity === '' || Number(formData.intensity) < 0) {
-      newErrors.intensity = "L'intensità deve essere >= 0"
+      newErrors.intensity = 'The intensity must be >= 0'
     }
     if (formData.pix_arr === '' || Number(formData.pix_arr) <= 0) {
-      newErrors.pix_arr = 'La dimensione del pixel deve essere maggiore di 0'
+      newErrors.pix_arr = 'The pixel size must be greater than 0'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -200,7 +200,7 @@ export function useExperimentPageModel() {
       await saveExperiment(payload.exps, payload)
       setMessage({
         type: 'success',
-        text: `Esperimento ${payload.exps} salvato con successo!`,
+        text: `Experiment ${payload.exps} saved.`,
       })
       setSelectedExpId(payload.exps)
       setIsEditing(true)
@@ -214,11 +214,11 @@ export function useExperimentPageModel() {
           if (field) backendErrors[field] = item.msg
         })
         setErrors(backendErrors)
-        setMessage({ type: 'error', text: 'Errori di validazione nel form.' })
+        setMessage({ type: 'error', text: 'The form has validation errors.' })
       } else {
         setMessage({
           type: 'error',
-          text: err.detail || err.message || 'Errore durante il salvataggio.',
+          text: err.detail || err.message || 'Error while saving.',
         })
       }
     } finally {
@@ -251,4 +251,4 @@ export function useExperimentPageModel() {
     handleExport,
     goBack: () => navigate('/processing'),
   }
-}
+}

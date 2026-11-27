@@ -7,7 +7,6 @@ export function parseExperimentIds(input) {
     const trimmed = part.trim()
     if (!trimmed) return
 
-    // Cerca pattern di tipo Range (es. "49-52")
     const rangeMatch = trimmed.match(/^(\d+)\s*-\s*(\d+)$/)
     if (rangeMatch) {
       const start = parseInt(rangeMatch[1], 10)
@@ -25,4 +24,31 @@ export function parseExperimentIds(input) {
   })
 
   return Array.from(resultSet)
+}
+
+export function parseAndValidateExperimentIds(input) {
+  const tokens = parseExperimentIds(input)
+  const ids = []
+  const invalidTokens = []
+
+  for (const token of tokens) {
+    if (!/^\d+$/.test(token)) {
+      invalidTokens.push(token)
+    } else {
+      ids.push(Number(token))
+    }
+  }
+
+  const normalized = input
+    .split(',')
+    .map((p) => p.trim().replace(/\s*-\s*/, '–'))
+    .filter(Boolean)
+    .join(', ')
+
+  const summary =
+    ids.length > 0 && invalidTokens.length === 0
+      ? `${ids.length} experiment${ids.length === 1 ? '' : 's'} will be created: ${normalized}`
+      : ''
+
+  return { ids, invalidTokens, summary }
 }

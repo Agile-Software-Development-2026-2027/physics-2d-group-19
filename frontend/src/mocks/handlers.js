@@ -448,6 +448,26 @@ const exportExperimentsHandler = http.get('/api/experiments/export', () => {
   })
 })
 
+// POST /api/experiments/batch -> Register multiple experiments at once
+const createExperimentsBatchHandler = http.post('/api/experiments/batch', async ({ request }) => {
+  const body = await request.json()
+  const { exp_ids = [], ...settings } = body
+
+  const existing = exp_ids.filter((id) => mockExperiments.some((e) => e.exps === id))
+  if (existing.length > 0) {
+    return HttpResponse.json(
+      { detail: 'Some experiment IDs are already registered', existing },
+      { status: 409 },
+    )
+  }
+
+  const created = exp_ids.map((exps) => ({ exps, ...settings }))
+  mockExperiments.push(...created)
+  mockExperiments.sort((a, b) => a.exps - b.exps)
+
+  return HttpResponse.json({ created }, { status: 201 })
+})
+
 
 export const handlers = [
     healthHandler,
@@ -457,6 +477,7 @@ export const handlers = [
     listExperimentsHandler,
     exportExperimentsHandler,
     importExperimentsHandler,
+    createExperimentsBatchHandler,
     getExperimentHandler,
     saveExperimentHandler,
     getDefaultParamsHandler,

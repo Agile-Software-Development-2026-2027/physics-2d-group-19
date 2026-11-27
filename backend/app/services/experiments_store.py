@@ -72,39 +72,66 @@ def get_experiment(data_dir: Path, exp_id: int) -> ExperimentSettings:
     raise KeyError(exp_id)
 
 
-def save_experiment(data_dir: Path, settings: ExperimentSettings) -> None:
+# the numbers in exp_ids that are already registered
+def find_existing(data_dir: Path, exp_ids: list[int]) -> list[int]:
+    registered = []
+    for experiment in list_experiments(data_dir):
+        registered.append(experiment.exps)
+
+    existing = []
+    for exp_id in exp_ids:
+        if exp_id in registered:
+            existing.append(exp_id)
+    return existing
+
+
+# put the line of one experiment in the right place of the file
+def put_line(lines: list[str], settings: ExperimentSettings) -> None:
+    new_line = to_settings_line(settings)
+
+    for i, line in enumerate(lines):
+        pieces = line.split()
+        if not pieces:
+            continue
+        number = int(pieces[0])
+
+        # the experiment is already in the file (also as a row of zeros): replace it
+        if number == settings.exps:
+            lines[i] = new_line
+            return
+
+        # first experiment with a higher number: insert the new line before it
+        if number > settings.exps:
+            lines.insert(i, new_line)
+            return
+
+    # it is the highest number: add it at the end
+    lines.append(new_line)
+
+
+# read the file once, put all the experiments in it, write it once
+def save_experiments(data_dir: Path, experiments: list[ExperimentSettings]) -> None:
     path = settings_path(data_dir)
-
     text = path.read_bytes().decode("utf-8")
-    lines = text.splitlines()
 
+    # keep the same line ending as the original file
     ending = "\n"
     if "\r\n" in text:
         ending = "\r\n"
-    trailing = ""
+
+    lines = text.splitlines()
+    for settings in experiments:
+        put_line(lines, settings)
+
+    new_text = ending.join(lines)
     if text.endswith("\n"):
-        trailing = ending
+        new_text = new_text + ending
 
-    new_text = to_settings_line(settings)
-
-    position = None
-    insert_at = len(lines)
-    for i, line in enumerate(lines):
-        exp = experiment_row(line)
-        if exp is None:
-            continue
-        if exp.exps == settings.exps:
-            position = i
-            break
-        if exp.exps > settings.exps and insert_at == len(lines):
-            insert_at = i
-
-    if position is not None:
-        lines[position] = new_text
-    else:
-        lines.insert(insert_at, new_text)
-
-    final_text = ending.join(lines) + trailing
+    # write a temporary file, then swap it with the real one
     temp_path = path.with_suffix(".tmp")
-    temp_path.write_bytes(final_text.encode("utf-8"))
+    temp_path.write_bytes(new_text.encode("utf-8"))
     os.replace(temp_path, path)
+
+
+def save_experiment(data_dir: Path, settings: ExperimentSettings) -> None:
+    save_experiments(data_dir, [settings])

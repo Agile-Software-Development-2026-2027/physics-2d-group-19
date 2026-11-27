@@ -14,6 +14,8 @@ export async function apiFetchRaw(path, options = {}) {
     }
     const err = new Error(`HTTP ${res.status}`)
     err.status = res.status
+    const body = await res.json().catch(() => null)
+    if (body && typeof body === 'object') Object.assign(err, body)
     throw err
   }
   return res
@@ -222,6 +224,30 @@ export async function getGifFrameUrl(id, index) {
 
 export async function getHistoryElaborations() {
   return await apiFetch(`/runs`)
+}
+
+// POST /api/experiments/import -> bulk import from Clamidomoni_settings.txt
+export async function importExperiments(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return await apiFetch('/experiments/import', {
+    method: 'POST',
+    body: formData,
+  })
+}
+
+// GET /api/experiments/export -> download Clamidomoni_settings.txt
+export async function exportExperiments() {
+  const res = await apiFetchRaw('/experiments/export')
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'Clamidomoni_settings.txt'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
 }
 
 export const getHealth = () => apiFetch('/health')

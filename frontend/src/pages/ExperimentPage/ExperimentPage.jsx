@@ -1,8 +1,10 @@
+import { useRef } from 'react'
 import { useExperimentPageModel } from './ExperimentPage.model.js'
 import styles from './ExperimentPage.module.css'
 
 export function ExperimentPage() {
   const model = useExperimentPageModel()
+    const importInputRef = useRef(null)
 
   return (
     <div className={styles.container}>
@@ -21,13 +23,43 @@ export function ExperimentPage() {
                     Register a new experiment or edit the settings of an existing one.
                 </p>
             </div>
-            <button
-            type="button"
-            onClick={model.newExperiment}
-            className="px-4 py-2 rounded-lg text-sm font-semibold bg-alga text-white hover:bg-alga-hover transition-colors cursor-pointer"
-            >
-            + New experiment
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".txt"
+                  className="hidden"
+                  onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) model.handleImport(file)
+                      e.target.value = ''
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={model.transferring}
+                  onClick={() => importInputRef.current?.click()}
+                  className="px-3.5 py-2 rounded-lg text-sm font-semibold border border-border bg-bg text-text hover:bg-surface disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                    <i className="fa-solid fa-file-import text-alga"></i>
+                    Import
+                </button>
+                <button
+                  type="button"
+                  disabled={model.transferring}
+                  onClick={model.handleExport}
+                  className="px-3.5 py-2 rounded-lg text-sm font-semibold border border-border bg-bg text-text hover:bg-surface disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                    <i class="fa-solid fa-file-export text-alga"></i>                    Export
+                </button>
+                <button
+                  type="button"
+                  onClick={model.newExperiment}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-alga text-white hover:bg-alga-hover transition-colors cursor-pointer"
+                >
+                    + Nuovo esperimento
+                </button>
+            </div>
         </div>
 
         {/* Feedback banner */}
@@ -307,4 +339,4 @@ export function ExperimentPage() {
         </div>
     </div>
   )
-}
+}

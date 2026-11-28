@@ -56,8 +56,8 @@ def import_experiments(
     content = file.file.read(MAX_IMPORT_BYTES + 1)
     if len(content) > MAX_IMPORT_BYTES:
         raise HTTPException(413, "The file is larger than 5 MB")
-    # a file that is not text fails the check of the 10 numbers and gives 422
-    text = content.decode("utf-8", errors="replace")
+    # utf-8-sig drops the Notepad BOM; a file that is not text fails the 10 numbers check
+    text = content.decode("utf-8-sig", errors="replace")
 
     data_dir = get_settings().data_dir
     try:

@@ -15,8 +15,8 @@ def upload(client, auth_headers, content: bytes):
     return client.post("/api/experiments/import", files=files, headers=auth_headers)
 
 
-def test_import_then_export_gives_the_same_file(client, auth_headers):
-    response = upload(client, auth_headers, RESOURCE_SETTINGS.read_bytes())
+def test_import_with_bom_then_export_gives_the_same_file(client, auth_headers):
+    response = upload(client, auth_headers, b"\xef\xbb\xbf" + RESOURCE_SETTINGS.read_bytes())
     assert response.status_code == 200
     assert response.json()["errors"] == []
 

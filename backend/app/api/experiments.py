@@ -5,13 +5,14 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Annotated
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, Response, UploadFile
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.schemas.experiment import (
     ExperimentBatchCreate,
     ExperimentBatchCreated,
+    ExperimentImportResult,
     ExperimentSettings,
     IlluminationUploadResponse,
 )
@@ -22,16 +23,47 @@ from app.services.experiments_store import (
     save_experiment,
     save_experiments,
 )
+from app.services.settings_io import BadSettingsLine, export_settings, import_settings
 from app.services.uploads import save_upload, upload_path
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/experiments", tags=["experiments"])
+
+MAX_IMPORT_BYTES = 5 * 1024 * 1024
 
 
 @router.get("")
 def read_experiments() -> list[ExperimentSettings]:
     data_dir = get_settings().data_dir
     return list_experiments(data_dir)
+
+
+# this must stay before GET /{exp_id}, otherwise "export" is read as an experiment number
+@router.get("/export")
+def export_experiments() -> Response:
+    data_dir = get_settings().data_dir
+    return Response(
+        content=export_settings(data_dir),
+        media_type="text/plain",
+        headers={"Content-Disposition": 'attachment; filename="Clamidomoni_settings.txt"'},
+    )
+
+
+@router.post("/import")
+def import_experiments(
+    file: Annotated[UploadFile, File(description="Clamidomoni_settings.txt of the PO")],
+) -> ExperimentImportResult:
+    content = file.file.read(MAX_IMPORT_BYTES + 1)
+    if len(content) > MAX_IMPORT_BYTES:
+        raise HTTPException(413, "The file is larger than 5 MB")
+    # utf-8-sig drops the Notepad BOM; a file that is not text fails the 10 numbers check
+    text = content.decode("utf-8-sig", errors="replace")
+
+    data_dir = get_settings().data_dir
+    try:
+        return import_settings(data_dir, text)
+    except BadSettingsLine as exc:
+        raise HTTPException(422, str(exc)) from None
 
 
 @router.get("/{exp_id}")

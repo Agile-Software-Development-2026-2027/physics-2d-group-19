@@ -58,6 +58,18 @@ class ExperimentBatchCreated(BaseModel):
     created: list[int] = Field(description="Experiment numbers that were created")
 
 
+class ImportLineError(BaseModel):
+    line: int = Field(description="Line number in the imported file, starting from 1")
+    detail: str = Field(description="Why the line was not imported")
+
+
+class ExperimentImportResult(BaseModel):
+    created: int = Field(description="Experiments that were not registered before")
+    updated: int = Field(description="Experiments that were already registered")
+    skipped_empty: int = Field(description="Rows of zeros, not imported")
+    errors: list[ImportLineError] = Field(description="Lines with invalid values")
+
+
 class IlluminationUploadResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

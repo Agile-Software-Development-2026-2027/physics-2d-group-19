@@ -250,6 +250,15 @@ export async function exportExperiments() {
   URL.revokeObjectURL(url)
 }
 
+// POST /api/experiments/batch -> register multiple experiments with shared settings
+export async function createExperimentsBatch(payload) {
+  return await apiFetch('/experiments/batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
 export const getHealth = () => apiFetch('/health')
 export const getMe = () => apiFetch('/auth/me')
 export const getToken = () => sessionStorage.getItem('token')

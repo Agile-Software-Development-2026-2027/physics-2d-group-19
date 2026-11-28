@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getExperiments, saveExperiment, exportExperiments, importExperiments } from '../../api/client/client.js'
+import {
+  createExperimentsBatch,
+  exportExperiments,
+  getExperiments,
+  importExperiments,
+  saveExperiment,
+} from '../../api/client/client.js'
+import { parseAndValidateExperimentIds } from '../../utility/splitExperimentID.js'
 
 // Default values populated when initiating a new experiment
 export const DEFAULT_EXPERIMENT = {
@@ -60,6 +67,31 @@ export function useExperimentPageModel() {
   const [message, setMessage] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [transferring, setTransferring] = useState(false)
+  const [isBatchMode, setIsBatchMode] = useState(false)
+  const [batchIdsInput, setBatchIdsInput] = useState('')
+  const [batchPreview, setBatchPreview] = useState({ ids: [], invalidTokens: [], summary: '' })
+
+  const setBatchMode = (enabled) => {
+    setIsBatchMode(enabled)
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next.exps
+      return next
+    })
+    setMessage(null)
+  }
+
+  const updateBatchIds = (value) => {
+    setBatchIdsInput(value)
+    setBatchPreview(parseAndValidateExperimentIds(value))
+    if (errors.exps) {
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next.exps
+        return next
+      })
+    }
+  }
 
   // Fetch list of registered experiments on component mount
   const fetchExperiments = () => {
@@ -76,6 +108,7 @@ export function useExperimentPageModel() {
 
   // Select an existing experiment to view and edit its parameters
   const selectExperiment = (exp) => {
+    setIsBatchMode(false)
     setSelectedExpId(exp.exps)
     setFormData({ ...exp })
     setIsEditing(true)
@@ -87,6 +120,8 @@ export function useExperimentPageModel() {
   const newExperiment = () => {
     setSelectedExpId(null)
     setFormData(DEFAULT_EXPERIMENT)
+    setBatchIdsInput('')
+    setBatchPreview({ ids: [], invalidTokens: [], summary: '' })
     setIsEditing(false)
     setErrors({})
     setMessage(null)
@@ -151,7 +186,16 @@ export function useExperimentPageModel() {
   // Perform client-side validation before request dispatch
   const validateForm = () => {
     const newErrors = {}
-    if (
+    if (isBatchMode) {
+      const { ids, invalidTokens } = parseAndValidateExperimentIds(batchIdsInput)
+      if (invalidTokens.length > 0) {
+        newErrors.exps = `Invalid IDs or inverted ranges: ${invalidTokens.join(', ')}`
+      } else if (ids.length === 0) {
+        newErrors.exps = 'Enter at least one experiment ID or range (e.g. 466-472)'
+      } else if (ids.length > 100) {
+        newErrors.exps = 'You can create at most 100 experiments at once'
+      }
+    } else if (
       formData.exps === '' ||
       Number(formData.exps) < 0 ||
       !Number.isInteger(Number(formData.exps))
@@ -175,7 +219,7 @@ export function useExperimentPageModel() {
     return Object.keys(newErrors).length === 0
   }
 
-  // Save or update experiment settings via PUT /api/experiments/{id}
+  // Save single experiment (PUT /api/experiments/{id}) or batch (POST /api/experiments/batch)
   const save = async (e) => {
     e.preventDefault()
     setMessage(null)
@@ -183,8 +227,7 @@ export function useExperimentPageModel() {
     if (!validateForm()) return
 
     setLoading(true)
-    const payload = {
-      exps: Number(formData.exps),
+    const sharedFields = {
       exp_type: Number(formData.exp_type),
       ill: Number(formData.ill),
       intensity: Number(formData.intensity),
@@ -197,17 +240,34 @@ export function useExperimentPageModel() {
     }
 
     try {
-      await saveExperiment(payload.exps, payload)
-      setMessage({
-        type: 'success',
-        text: `Experiment ${payload.exps} saved.`,
-      })
-      setSelectedExpId(payload.exps)
-      setIsEditing(true)
-      fetchExperiments()
+      if (isBatchMode) {
+        const { ids } = parseAndValidateExperimentIds(batchIdsInput)
+        const res = await createExperimentsBatch({ exp_ids: ids, ...sharedFields })
+        const count = res.created?.length ?? ids.length
+        setMessage({
+          type: 'success',
+          text: `${count} experiment${count === 1 ? '' : 's'} registered successfully!`,
+        })
+        setBatchIdsInput('')
+        setBatchPreview({ ids: [], invalidTokens: [], summary: '' })
+        fetchExperiments()
+      } else {
+        const payload = { exps: Number(formData.exps), ...sharedFields }
+        await saveExperiment(payload.exps, payload)
+        setMessage({
+          type: 'success',
+          text: `Experiment ${payload.exps} saved.`,
+        })
+        setSelectedExpId(payload.exps)
+        setIsEditing(true)
+        fetchExperiments()
+      }
     } catch (err) {
-      // Map 422 validation error array to individual form fields
-      if (err.status === 422 && Array.isArray(err.detail)) {
+      if (err.status === 409 && Array.isArray(err.existing)) {
+        const msg = `Already registered: ${err.existing.join(', ')}`
+        setErrors((prev) => ({ ...prev, exps: msg }))
+        setMessage({ type: 'error', text: msg })
+      } else if (err.status === 422 && Array.isArray(err.detail)) {
         const backendErrors = {}
         err.detail.forEach((item) => {
           const field = item.loc?.[item.loc.length - 1]
@@ -242,13 +302,18 @@ export function useExperimentPageModel() {
     errors,
     message,
     isEditing,
+    isBatchMode,
+    batchIdsInput,
+    batchPreview,
     // Actions
     selectExperiment,
     newExperiment,
     updateField,
+    setBatchMode,
+    updateBatchIds,
     save,
     handleImport,
     handleExport,
     goBack: () => navigate('/processing'),
   }
-}
+}

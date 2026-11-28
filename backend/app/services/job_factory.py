@@ -10,6 +10,7 @@ from fastapi import UploadFile
 from app.config import Settings
 from app.schemas.params import ProcessingParams
 from app.services.experiments_store import get_experiment, settings_path
+from app.services.file_resolver import ResolvedFiles, resolve_files
 from app.services.job_config import save_config
 from app.services.jobs_store import create_job as create_stored_job
 from app.services.jobs_store import job_dir, write_status
@@ -42,10 +43,9 @@ def prepare_job(
     illumination: UploadFile | None = None,
 ) -> str:
     """Validate inputs, create a queued job directory, copy inputs, and save config.json."""
-    _ = settings  # Reserved for lab directory resolution (30.2 / 30.3).
     provided = sum(item is not None for item in (video, video_id, trajectories))
-    if provided != 1:
-        raise JobInputValidationError("Provide exactly one of video, video_id, or trajectories")
+    if provided > 1:
+        raise JobInputValidationError("Provide at most one of video, video_id, or trajectories")
 
     try:
         exp = get_experiment(data_dir, exp_id)
@@ -63,12 +63,16 @@ def prepare_job(
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         uploaded_video_name = meta.get("filename", f"tAlgae{exp_id}.avi")
 
+    resolved: ResolvedFiles | None = None
+    if provided == 0 or illumination is None:
+        resolved = resolve_files(settings, data_dir, exp)
+
+    if provided == 0 and resolved.video is None and resolved.trajectories is None:
+        raise JobInputValidationError(f"Missing video or trajectories for experiment {exp_id}")
+
     illumination_id = exp.ill
-    stored_illumination = (
-        data_dir / "experiments" / "illumination" / f"illumination{illumination_id}.tiff"
-    )
-    if illumination is None and not stored_illumination.is_file():
-        raise JobInputValidationError(f"Missing illumination image for experiment {exp_id}")
+    if illumination is None and (resolved is None or resolved.illumination is None):
+        raise JobInputValidationError(f"Missing illumination illumination{illumination_id}.tiff")
 
     job_id = create_stored_job(data_dir, exp_id)
     try:
@@ -80,12 +84,17 @@ def prepare_job(
             ):
                 shutil.copyfileobj(source_file, destination)
             inputs = {"video": uploaded_video_name, "video_id": video_id}
-        else:
+        elif video is not None or trajectories is not None:
             source = video if video is not None else trajectories
             extension = "avi" if video is not None else "txt"
             with (input_dir / f"tAlgae{exp_id}.{extension}").open("wb") as destination:
                 shutil.copyfileobj(source.file, destination)
             inputs = {("video" if video is not None else "trajectories"): source.filename}
+        elif resolved.video is not None:
+            inputs = {"video": resolved.video.name, "video_path": str(resolved.video)}
+        else:
+            shutil.copy(resolved.trajectories, input_dir / f"tAlgae{exp_id}.txt")
+            inputs = {"trajectories": resolved.trajectories.name}
 
         ill_dest = input_dir / f"illumination{illumination_id}.tiff"
         if illumination is not None:
@@ -93,8 +102,8 @@ def prepare_job(
                 shutil.copyfileobj(illumination.file, destination)
             inputs["illumination"] = illumination.filename
         else:
-            shutil.copy(stored_illumination, ill_dest)
-            inputs["illumination"] = stored_illumination.name
+            shutil.copy(resolved.illumination, ill_dest)
+            inputs["illumination"] = resolved.illumination.name
 
         shutil.copy(settings_path(data_dir), input_dir / "talgae_settings.txt")
         save_config(data_dir, job_id, exp, params, inputs, make_gif=make_gif)

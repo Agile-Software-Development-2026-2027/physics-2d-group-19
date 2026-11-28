@@ -1,6 +1,8 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.schemas.setup import SetupValues
 
 
 class ExperimentSettings(BaseModel):
@@ -34,6 +36,26 @@ class ExperimentSettings(BaseModel):
     lin: Literal[0, 1] = Field(0, description="Linear illumination : 0=no , 1=yes")
 
     axis: Literal[0, 1] = Field(0, description="Axis of the linear gradient : 0=x , 1=y")
+
+
+# several experiments with the same values: the 8 fields of a setup, no_skip and the numbers
+class ExperimentBatchCreate(SetupValues):
+    exp_ids: list[Annotated[int, Field(ge=0)]] = Field(
+        min_length=1, max_length=100, description="Experiment numbers to create"
+    )
+
+    no_skip: bool = Field(True, description="Include the experiments in the analysis")
+
+    @field_validator("exp_ids")
+    @classmethod
+    def no_duplicates(cls, exp_ids: list[int]) -> list[int]:
+        if len(set(exp_ids)) != len(exp_ids):
+            raise ValueError("exp_ids must not contain the same number twice")
+        return exp_ids
+
+
+class ExperimentBatchCreated(BaseModel):
+    created: list[int] = Field(description="Experiment numbers that were created")
 
 
 class IlluminationUploadResponse(BaseModel):

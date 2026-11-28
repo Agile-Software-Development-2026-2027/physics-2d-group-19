@@ -6,10 +6,22 @@ from tempfile import NamedTemporaryFile
 from typing import Annotated
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.schemas.experiment import ExperimentSettings, IlluminationUploadResponse
-from app.services.experiments_store import get_experiment, list_experiments, save_experiment
+from app.schemas.experiment import (
+    ExperimentBatchCreate,
+    ExperimentBatchCreated,
+    ExperimentSettings,
+    IlluminationUploadResponse,
+)
+from app.services.experiments_store import (
+    find_existing,
+    get_experiment,
+    list_experiments,
+    save_experiment,
+    save_experiments,
+)
 from app.services.uploads import save_upload, upload_path
 
 logger = logging.getLogger(__name__)
@@ -95,3 +107,24 @@ def write_experiment(exp_id: int, experiment: ExperimentSettings) -> ExperimentS
     data_dir = get_settings().data_dir
     save_experiment(data_dir, experiment)
     return experiment
+
+
+@router.post("/batch", status_code=201)
+def create_experiments(batch: ExperimentBatchCreate) -> ExperimentBatchCreated:
+    data_dir = get_settings().data_dir
+
+    # all or nothing: if one number is already used, nothing is written
+    existing = find_existing(data_dir, batch.exp_ids)
+    if existing:
+        return JSONResponse(
+            status_code=409,
+            content={"detail": "Some experiments are already registered", "existing": existing},
+        )
+
+    values = batch.model_dump(exclude={"exp_ids"})
+    experiments = []
+    for exp_id in batch.exp_ids:
+        experiments.append(ExperimentSettings(exps=exp_id, **values))
+
+    save_experiments(data_dir, experiments)
+    return ExperimentBatchCreated(created=batch.exp_ids)

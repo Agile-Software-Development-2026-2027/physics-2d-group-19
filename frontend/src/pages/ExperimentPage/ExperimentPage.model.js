@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getExperiments, saveExperiment } from '../../api/client/client.js'
+import { getExperiments, saveExperiment, exportExperiments, importExperiments } from '../../api/client/client.js'
 
 // Default values populated when initiating a new experiment
 export const DEFAULT_EXPERIMENT = {
@@ -59,13 +59,14 @@ export function useExperimentPageModel() {
   const [errors, setErrors] = useState({})
   const [message, setMessage] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [transferring, setTransferring] = useState(false)
 
   // Fetch list of registered experiments on component mount
   const fetchExperiments = () => {
     getExperiments()
       .then((data) => setExperiments(data || []))
       .catch(() =>
-        setMessage({ type: 'error', text: 'Impossibile caricare gli esperimenti.' }),
+        setMessage({ type: 'error', text: 'Could not load the experiments.' }),
       )
   }
 
@@ -103,6 +104,50 @@ export function useExperimentPageModel() {
     }
   }
 
+  // Import experiments from a legacy Clamidomoni_settings.txt file
+  const handleImport = async (file) => {
+    if (!file) return
+    setTransferring(true)
+    setMessage(null)
+    try {
+      const res = await importExperiments(file)
+      const baseSummary = `Import completed: ${res.created} created, ${res.updated} updated, ${res.skipped_empty} skipped.`
+      const lineErrors =
+        res.errors?.length > 0
+          ? ` Errors on lines: ${res.errors.map((e) => `${e.line} (${e.detail})`).join('; ')}.`
+          : ''
+      setMessage({
+        type: res.errors?.length > 0 ? 'error' : 'success',
+        text: `${baseSummary}${lineErrors}`,
+      })
+      fetchExperiments()
+    } catch (err) {
+      const fallback =
+        err.status === 413
+          ? 'File exceeds the 5 MB size limit.'
+          : 'Failed to import settings file.'
+      setMessage({
+        type: 'error',
+        text: typeof err.detail === 'string' ? err.detail : fallback,
+      })
+    } finally {
+      setTransferring(false)
+    }
+  }
+
+  // Export all registered experiments as Clamidomoni_settings.txt
+  const handleExport = async () => {
+    setTransferring(true)
+    setMessage(null)
+    try {
+      await exportExperiments()
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to export settings file.' })
+    } finally {
+      setTransferring(false)
+    }
+  }
+
   // Perform client-side validation before request dispatch
   const validateForm = () => {
     const newErrors = {}
@@ -111,20 +156,20 @@ export function useExperimentPageModel() {
       Number(formData.exps) < 0 ||
       !Number.isInteger(Number(formData.exps))
     ) {
-      newErrors.exps = "Inserire un numero d'esperimento valido (intero >= 0)"
+      newErrors.exps = 'Enter a valid experiment number (integer >= 0)'
     }
     if (
       formData.ill === '' ||
       Number(formData.ill) < 0 ||
       !Number.isInteger(Number(formData.ill))
     ) {
-      newErrors.ill = "Il numero d'illuminazione deve essere un intero >= 0"
+      newErrors.ill = 'The illumination number must be an integer >= 0'
     }
     if (formData.intensity === '' || Number(formData.intensity) < 0) {
-      newErrors.intensity = "L'intensità deve essere >= 0"
+      newErrors.intensity = 'The intensity must be >= 0'
     }
     if (formData.pix_arr === '' || Number(formData.pix_arr) <= 0) {
-      newErrors.pix_arr = 'La dimensione del pixel deve essere maggiore di 0'
+      newErrors.pix_arr = 'The pixel size must be greater than 0'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -155,7 +200,7 @@ export function useExperimentPageModel() {
       await saveExperiment(payload.exps, payload)
       setMessage({
         type: 'success',
-        text: `Esperimento ${payload.exps} salvato con successo!`,
+        text: `Experiment ${payload.exps} saved.`,
       })
       setSelectedExpId(payload.exps)
       setIsEditing(true)
@@ -169,11 +214,11 @@ export function useExperimentPageModel() {
           if (field) backendErrors[field] = item.msg
         })
         setErrors(backendErrors)
-        setMessage({ type: 'error', text: 'Errori di validazione nel form.' })
+        setMessage({ type: 'error', text: 'The form has validation errors.' })
       } else {
         setMessage({
           type: 'error',
-          text: err.detail || err.message || 'Errore durante il salvataggio.',
+          text: err.detail || err.message || 'Error while saving.',
         })
       }
     } finally {
@@ -193,6 +238,7 @@ export function useExperimentPageModel() {
     selectedExpId,
     formData,
     loading,
+    transferring,
     errors,
     message,
     isEditing,
@@ -201,6 +247,8 @@ export function useExperimentPageModel() {
     newExperiment,
     updateField,
     save,
+    handleImport,
+    handleExport,
     goBack: () => navigate('/processing'),
   }
-}
+}

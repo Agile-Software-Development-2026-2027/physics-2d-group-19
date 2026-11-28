@@ -1,8 +1,10 @@
+import { useRef } from 'react'
 import { useExperimentPageModel } from './ExperimentPage.model.js'
 import styles from './ExperimentPage.module.css'
 
 export function ExperimentPage() {
   const model = useExperimentPageModel()
+    const importInputRef = useRef(null)
 
   return (
     <div className={styles.container}>
@@ -14,20 +16,50 @@ export function ExperimentPage() {
                     onClick={model.goBack}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-alga mb-2 transition-colors cursor-pointer"
                 >
-                    ← Torna a Elaborazione
+                    ← Back to Processing
                 </button>
-                <h1 className="text-2xl font-bold text-text">Gestione esperimenti</h1>
+                <h1 className="text-2xl font-bold text-text">Experiments</h1>
                 <p className="text-sm text-text-muted">
-                    Registra un nuovo esperimento o modifica le impostazioni di uno esistente.
+                    Register a new experiment or edit the settings of an existing one.
                 </p>
             </div>
-            <button
-            type="button"
-            onClick={model.newExperiment}
-            className="px-4 py-2 rounded-lg text-sm font-semibold bg-alga text-white hover:bg-alga-hover transition-colors cursor-pointer"
-            >
-            + Nuovo esperimento
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".txt"
+                  className="hidden"
+                  onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) model.handleImport(file)
+                      e.target.value = ''
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={model.transferring}
+                  onClick={() => importInputRef.current?.click()}
+                  className="px-3.5 py-2 rounded-lg text-sm font-semibold border border-border bg-bg text-text hover:bg-surface disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                    <i className="fa-solid fa-file-import text-alga"></i>
+                    Import
+                </button>
+                <button
+                  type="button"
+                  disabled={model.transferring}
+                  onClick={model.handleExport}
+                  className="px-3.5 py-2 rounded-lg text-sm font-semibold border border-border bg-bg text-text hover:bg-surface disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                    <i class="fa-solid fa-file-export text-alga"></i>                    Export
+                </button>
+                <button
+                  type="button"
+                  onClick={model.newExperiment}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-alga text-white hover:bg-alga-hover transition-colors cursor-pointer"
+                >
+                    + Nuovo esperimento
+                </button>
+            </div>
         </div>
 
         {/* Feedback banner */}
@@ -47,9 +79,9 @@ export function ExperimentPage() {
         <div className={styles.grid}>
             {/* Left column: list of registered experiments */}
             <section className={styles.listCard}>
-                <h2>Esperimenti registrati ({model.experiments.length})</h2>
+                <h2>Registered experiments ({model.experiments.length})</h2>
                 {model.experiments.length === 0 ? (
-                    <p className="text-sm text-text-muted">Nessun esperimento registrato.</p>
+                    <p className="text-sm text-text-muted">No experiments registered.</p>
                 ) : (
                     <ul className={styles.expList}>
                     {model.experiments.map((exp) => (
@@ -67,7 +99,7 @@ export function ExperimentPage() {
                             </span>
                         </div>
                         <span className="text-xs font-medium text-alga">
-                            {model.selectedExpId === exp.exps ? 'In modifica' : 'Modifica →'}
+                            {model.selectedExpId === exp.exps ? 'Editing' : 'Edit →'}
                         </span>
                         </li>
                     ))}
@@ -79,14 +111,14 @@ export function ExperimentPage() {
                 <section className={styles.formCard}>
                 <h2>
                     {model.isEditing
-                    ? `Modifica Esperimento ${model.formData.exps}`
-                    : 'Nuovo Esperimento'}
+                    ? `Edit experiment ${model.formData.exps}`
+                    : 'New experiment'}
                 </h2>
                 <form onSubmit={model.save} noValidate>
                     <div className={styles.formGrid}>
                         {/* exps */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="exps">Numero esperimento (exps)</label>
+                            <label htmlFor="exps">Experiment number (exps)</label>
                             <input
                             id="exps"
                             type="number"
@@ -98,7 +130,7 @@ export function ExperimentPage() {
                             className="px-3 py-1.5 rounded-lg border border-border bg-bg text-text text-sm focus:border-alga focus:outline-hidden disabled:opacity-60"
                             />
                             <span className={styles.fieldDesc}>
-                            Identificativo univoco dell'esperimento
+                            Unique identifier of the experiment
                             </span>
                             {model.errors.exps && (
                             <span className={styles.fieldError}>{model.errors.exps}</span>
@@ -107,7 +139,7 @@ export function ExperimentPage() {
 
                         {/* exp_type */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="exp_type">Tipo esperimento (exp_type)</label>
+                            <label htmlFor="exp_type">Experiment type (exp_type)</label>
                             <select
                             id="exp_type"
                             value={model.formData.exp_type}
@@ -121,7 +153,7 @@ export function ExperimentPage() {
                             ))}
                             </select>
                             <span className={styles.fieldDesc}>
-                            Configurazione del pattern ottico
+                            Optical pattern configuration
                             </span>
                             {model.errors.exp_type && (
                             <span className={styles.fieldError}>{model.errors.exp_type}</span>
@@ -130,7 +162,7 @@ export function ExperimentPage() {
 
                         {/* ill */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="ill">Numero illuminazione (ill)</label>
+                            <label htmlFor="ill">Illumination number (ill)</label>
                             <input
                             id="ill"
                             type="number"
@@ -141,7 +173,7 @@ export function ExperimentPage() {
                             className="px-3 py-1.5 rounded-lg border border-border bg-bg text-text text-sm focus:border-alga focus:outline-hidden"
                             />
                             <span className={styles.fieldDesc}>
-                            Numero dell'immagine di illuminazione (es. 14)
+                            Number of the illumination image (e.g. 14)
                             </span>
                             {model.errors.ill && (
                             <span className={styles.fieldError}>{model.errors.ill}</span>
@@ -150,7 +182,7 @@ export function ExperimentPage() {
 
                         {/* intensity */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="intensity">Intensità (µW)</label>
+                            <label htmlFor="intensity">Intensity (µW)</label>
                             <input
                             id="intensity"
                             type="number"
@@ -160,7 +192,7 @@ export function ExperimentPage() {
                             onChange={(e) => model.updateField('intensity', e.target.value)}
                             className="px-3 py-1.5 rounded-lg border border-border bg-bg text-text text-sm focus:border-alga focus:outline-hidden"
                             />
-                            <span className={styles.fieldDesc}>Potenza della luce incidente</span>
+                            <span className={styles.fieldDesc}>Power of the incident light</span>
                             {model.errors.intensity && (
                             <span className={styles.fieldError}>{model.errors.intensity}</span>
                             )}
@@ -168,7 +200,7 @@ export function ExperimentPage() {
 
                         {/* pix_arr */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="pix_arr">Dimensione pixel (pix_arr)</label>
+                            <label htmlFor="pix_arr">Pixel size (pix_arr)</label>
                             <input
                             id="pix_arr"
                             type="number"
@@ -178,7 +210,7 @@ export function ExperimentPage() {
                             onChange={(e) => model.updateField('pix_arr', e.target.value)}
                             className="px-3 py-1.5 rounded-lg border border-border bg-bg text-text text-sm focus:border-alga focus:outline-hidden"
                             />
-                            <span className={styles.fieldDesc}>Scala spaziale (µm/pixel)</span>
+                            <span className={styles.fieldDesc}>Spatial scale (µm/pixel)</span>
                             {model.errors.pix_arr && (
                             <span className={styles.fieldError}>{model.errors.pix_arr}</span>
                             )}
@@ -186,7 +218,7 @@ export function ExperimentPage() {
 
                         {/* ctr */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="ctr">Centro illuminazione (ctr)</label>
+                            <label htmlFor="ctr">Illumination centre (ctr)</label>
                             <select
                             id="ctr"
                             value={model.formData.ctr}
@@ -199,7 +231,7 @@ export function ExperimentPage() {
                                 </option>
                             ))}
                             </select>
-                            <span className={styles.fieldDesc}>Posizione del fascio di luce</span>
+                            <span className={styles.fieldDesc}>Position of the light beam</span>
                             {model.errors.ctr && (
                             <span className={styles.fieldError}>{model.errors.ctr}</span>
                             )}
@@ -207,7 +239,7 @@ export function ExperimentPage() {
 
                         {/* fluo */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="fluo">Fluorescenza (fluo)</label>
+                            <label htmlFor="fluo">Fluorescence (fluo)</label>
                             <select
                             id="fluo"
                             value={model.formData.fluo}
@@ -221,7 +253,7 @@ export function ExperimentPage() {
                             ))}
                             </select>
                             <span className={styles.fieldDesc}>
-                            Modalità immagine di fluorescenza
+                            Fluorescence image mode
                             </span>
                             {model.errors.fluo && (
                             <span className={styles.fieldError}>{model.errors.fluo}</span>
@@ -230,7 +262,7 @@ export function ExperimentPage() {
 
                         {/* lin */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="lin">Illuminazione lineare (lin)</label>
+                            <label htmlFor="lin">Linear illumination (lin)</label>
                             <select
                             id="lin"
                             value={model.formData.lin}
@@ -243,7 +275,7 @@ export function ExperimentPage() {
                                 </option>
                             ))}
                             </select>
-                            <span className={styles.fieldDesc}>Presenza di gradiente lineare</span>
+                            <span className={styles.fieldDesc}>Whether there is a linear gradient</span>
                             {model.errors.lin && (
                             <span className={styles.fieldError}>{model.errors.lin}</span>
                             )}
@@ -251,7 +283,7 @@ export function ExperimentPage() {
 
                         {/* axis */}
                         <div className={styles.fieldGroup}>
-                            <label htmlFor="axis">Asse gradiente (axis)</label>
+                            <label htmlFor="axis">Gradient axis (axis)</label>
                             <select
                             id="axis"
                             value={model.formData.axis}
@@ -265,7 +297,7 @@ export function ExperimentPage() {
                             ))}
                             </select>
                             <span className={styles.fieldDesc}>
-                            Direzione del gradiente lineare
+                            Direction of the linear gradient
                             </span>
                             {model.errors.axis && (
                             <span className={styles.fieldError}>{model.errors.axis}</span>
@@ -281,7 +313,7 @@ export function ExperimentPage() {
                             onChange={(e) => model.updateField('no_skip', e.target.checked)}
                             className="h-4 w-4 rounded-sm border-border text-alga focus:ring-alga cursor-pointer"
                             />
-                            <label htmlFor="no_skip">Includi nell'analisi (no_skip)</label>
+                            <label htmlFor="no_skip">Include in the analysis (no_skip)</label>
                         </div>
 
                         {/* Action buttons */}
@@ -291,14 +323,14 @@ export function ExperimentPage() {
                             onClick={model.newExperiment}
                             className="px-4 py-2 rounded-lg text-sm font-semibold border border-border bg-bg text-text hover:bg-surface transition-colors cursor-pointer"
                             >
-                            Annulla
+                            Cancel
                             </button>
                             <button
                             type="submit"
                             disabled={model.loading}
                             className="px-5 py-2 rounded-lg text-sm font-semibold bg-alga text-white hover:bg-alga-hover disabled:opacity-50 transition-colors cursor-pointer"
                             >
-                            {model.loading ? 'Salvataggio...' : 'Salva impostazioni'}
+                            {model.loading ? 'Saving…' : 'Save settings'}
                             </button>
                         </div>
                     </div>

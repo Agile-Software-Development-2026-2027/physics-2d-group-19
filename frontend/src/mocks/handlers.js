@@ -351,6 +351,103 @@ const getGifFrameHandler = http.get('/api/jobs/:id/gif/frames/:name.png', () => 
   return new HttpResponse(ONE_PIXEL_PNG, { headers: { 'Content-Type': 'image/png' } })
 })
 
+// POST /api/experiments/import -> Parse and import Clamidomoni_settings.txt
+const importExperimentsHandler = http.post('/api/experiments/import', async ({ request }) => {
+  const formData = await request.formData()
+  const file = formData.get('file')
+  if (!file) {
+    return HttpResponse.json({ detail: 'Missing file' }, { status: 422 })
+  }
+
+  const text = await file.text()
+  const lines = text.split(/\r?\n/)
+  const parsedRows = []
+  let skippedEmpty = 0
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim()
+    if (!trimmed) continue
+    const parts = trimmed.split(/\s+/).map(Number)
+    if (parts.length !== 10 || parts.some(Number.isNaN)) {
+      return HttpResponse.json(
+        { detail: `Line ${i + 1}: expected 10 numeric columns` },
+        { status: 422 },
+      )
+    }
+    if (parts.slice(1).every((v) => v === 0)) {
+      skippedEmpty++
+      continue
+    }
+    parsedRows.push({ line: i + 1, parts })
+  }
+
+  let created = 0
+  let updated = 0
+  const errors = []
+
+  for (const { line, parts } of parsedRows) {
+    const [exps, exp_type, ill, intensity, pix_arr, no_skip, ctr, fluo, lin, axis] = parts
+    if (exps < 0 || exp_type < 0 || exp_type > 5 || pix_arr <= 0) {
+      errors.push({ line, detail: 'Invalid experiment field values' })
+      continue
+    }
+    const row = {
+      exps,
+      exp_type,
+      ill,
+      intensity,
+      pix_arr,
+      no_skip: Boolean(no_skip),
+      ctr,
+      fluo,
+      lin: Boolean(lin),
+      axis,
+    }
+    const idx = mockExperiments.findIndex((e) => e.exps === exps)
+    if (idx >= 0) {
+      mockExperiments[idx] = row
+      updated++
+    } else {
+      mockExperiments.push(row)
+      created++
+    }
+  }
+  mockExperiments.sort((a, b) => a.exps - b.exps)
+
+  return HttpResponse.json({
+    created,
+    updated,
+    skipped_empty: skippedEmpty,
+    errors,
+  })
+})
+
+// GET /api/experiments/export -> Download Clamidomoni_settings.txt
+const exportExperimentsHandler = http.get('/api/experiments/export', () => {
+  const byId = new Map(mockExperiments.map((e) => [e.exps, e]))
+  const maxId = mockExperiments.reduce((max, e) => Math.max(max, e.exps), 0)
+  const lines = []
+
+  for (let id = 0; id <= maxId; id++) {
+    const e = byId.get(id)
+    if (!e) {
+      lines.push(`${id} 0 0 0 0.000000 1 0 0 0 0`)
+    } else {
+      lines.push(
+        `${e.exps} ${e.exp_type} ${e.ill} ${e.intensity} ${Number(e.pix_arr).toFixed(6)} ` +
+        `${e.no_skip ? 1 : 0} ${e.ctr} ${e.fluo} ${e.lin ? 1 : 0} ${e.axis}`,
+      )
+    }
+  }
+
+  return new HttpResponse(`${lines.join('\n')}\n`, {
+    headers: {
+      'Content-Type': 'text/plain',
+      'Content-Disposition': 'attachment; filename="Clamidomoni_settings.txt"',
+    },
+  })
+})
+
 
 export const handlers = [
     healthHandler,
@@ -358,6 +455,8 @@ export const handlers = [
     getCurrentUserHandler , 
     createExperimentHandler,
     listExperimentsHandler,
+    exportExperimentsHandler,
+    importExperimentsHandler,
     getExperimentHandler,
     saveExperimentHandler,
     getDefaultParamsHandler,
@@ -376,6 +475,6 @@ export const handlers = [
     listPlotsHandler,
     downloadPlotHandler,
     createJobHandler,
-    getJobHandler
+    getJobHandler,
 ]
 

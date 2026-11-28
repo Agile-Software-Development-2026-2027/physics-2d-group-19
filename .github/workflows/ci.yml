@@ -23,6 +23,8 @@ jobs:
     timeout-minutes: 15
     env:
       MPLBACKEND: Agg
+      # Python 3.12 monitoring API: same coverage, pytest about 3x faster than the default tracer.
+      COVERAGE_CORE: sysmon
     defaults:
       run:
         working-directory: backend

@@ -3,9 +3,8 @@ from pathlib import Path
 
 import pytest
 
+from app.resources import ANALYSIS_PARAMS
 from app.services.results import RESULT_NAMES, save_csv, save_legacy_txt
-from core.clam_pipeline.analyze import AnalysisParams, FilterParams, analyze_experiment
-from core.clam_pipeline.io import load_settings, load_trajectories_txt
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "exp49"
 
@@ -17,51 +16,12 @@ LAB_FILES = [
     "omega_exp49.txt",
 ]
 
-# Analysis_param copied from the script make_reference.py
-ANALYSIS_PARAMS = AnalysisParams(
-    diam=10,
-    dt=0.1,
-    particle_show=5,
-    disc_radius=350,
-    flux_cg_in=1,
-    flux_cg_out=150,
-    tumbling_threshold=5.0,
-    radial_map=False,
-    nskip=1,
-)
-
-# Filter copied from the script make_reference.py
-FILTER_PARAMS = FilterParams(
-    lifetime_min=0,
-    threshold_dist=0,
-    threshold_dist_tot=0,
-    dist_step=1,
-    strict=True,
-    only_inside=True,
-    blinking_ratio=0,
-    blinking_tolerance=0,
-    long_track_min_snaps=0,
-)
-
 
 @pytest.fixture(scope="module")
-def exp49_results_dir(tmp_path_factory):
+def exp49_results_dir(tmp_path_factory, exp49_outputs):
+    """Legacy .txt and CSV files of experiment 49, written from the shared analysis."""
     d = tmp_path_factory.mktemp("results")
-
-    settings = load_settings(FIXTURES_DIR / "talgae_settings.txt")
-    row = settings.loc[settings["exps"] == 49].iloc[0]
-    traj_df = load_trajectories_txt(FIXTURES_DIR / "tAlgae49.txt")
-
-    outputs = analyze_experiment(
-        exp_id=49,
-        settings_row=row,
-        traj_df=traj_df,
-        illum_dir=FIXTURES_DIR,
-        radial_dir=FIXTURES_DIR / "_unused_radial_map",
-        params=ANALYSIS_PARAMS,
-        fparams=FILTER_PARAMS,
-    )
-
+    outputs = exp49_outputs
     save_legacy_txt(outputs, d, 49, ANALYSIS_PARAMS)
     save_csv(outputs, d)
     return d

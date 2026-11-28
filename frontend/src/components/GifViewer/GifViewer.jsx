@@ -22,7 +22,7 @@ function ConcentrationChart({ values, index }) {
       viewBox={`0 0 ${width} ${height}`}
       className="w-full h-auto"
       role="img"
-      aria-label="Concentrazione nell'anello nel tempo"
+      aria-label="Concentration in the ring over time"
     >
       <polyline
         points={points}
@@ -109,13 +109,13 @@ export function GifViewer({ jobId }) {
 
   return (
     <section className="mt-8 p-5 rounded-xl border border-border bg-surface">
-      <h2 className="mb-4 text-lg font-semibold">Traiettorie (GIF)</h2>
+      <h2 className="mb-4 text-lg font-semibold">Trajectories (GIF)</h2>
 
       <div className="grid gap-6 md:grid-cols-2">
         <figure className="flex flex-col gap-2">
           <img
             src={gifSrc}
-            alt="GIF delle traiettorie"
+            alt="Trajectory GIF"
             className="w-full rounded-lg bg-white"
           />
           <a
@@ -123,7 +123,7 @@ export function GifViewer({ jobId }) {
             download="trajectories.gif"
             className="self-start px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-border bg-bg text-text hover:bg-alga-light hover:text-alga hover:border-alga/40 transition-colors"
           >
-            ⬇ Scarica GIF
+            ⬇ Download GIF
           </a>
         </figure>
 
@@ -132,15 +132,15 @@ export function GifViewer({ jobId }) {
             {frameSrc && (
               <img
                 src={frameSrc}
-                alt={`Frame ${index + 1} di ${frames.count}`}
+                alt={`Frame ${index + 1} of ${frames.count}`}
                 className="w-full rounded-lg bg-white"
               />
             )}
 
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-text-muted">
-                Frame {index + 1} di {frames.count}
-                {videoFrame !== undefined && ` (frame ${videoFrame} del video)`}
+                Frame {index + 1} of {frames.count}
+                {videoFrame !== undefined && ` (video frame ${videoFrame})`}
               </span>
               <input
                 type="range"
@@ -155,7 +155,7 @@ export function GifViewer({ jobId }) {
             <p className="text-sm">
               {cells !== undefined && (
                 <>
-                  <strong>{cells}</strong> cellule nell&apos;anello
+                  <strong>{cells}</strong> cells in the ring
                 </>
               )}
               {ratio !== undefined && (

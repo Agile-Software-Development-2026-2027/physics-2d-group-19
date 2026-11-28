@@ -1,5 +1,6 @@
 import io
 import json
+import shutil
 
 import pytest
 
@@ -9,10 +10,12 @@ from app.resources import SETTINGS_TXT
 from app.schemas.experiment import ExperimentSettings
 from app.schemas.params import ProcessingParams
 from app.security import create_access_token
+from app.services import job_factory
 from app.services.experiments_store import save_experiment
 from app.services.job_config import load_config
 from app.services.jobs_store import create_job, job_dir, read_status, write_status
 from app.services.uploads import save_upload
+from tests.conftest import EXP49_FIXTURES
 
 
 @pytest.fixture
@@ -122,9 +125,9 @@ def test_copy_failure_does_not_start_pipeline(
     def fail(*args, **kwargs):
         raise OSError("disk unavailable")
 
-    monkeypatch.setattr(jobs.shutil, operation, fail)
+    monkeypatch.setattr(job_factory.shutil, operation, fail)
     if status_fails:
-        monkeypatch.setattr(jobs, "write_status", fail)
+        monkeypatch.setattr(job_factory, "write_status", fail)
     response = client.post("/api/jobs", files=uploads(), headers=headers)
     assert response.status_code == 500
     assert response.json() == {"detail": "Could not save job input"}
@@ -258,3 +261,90 @@ def test_create_job_uses_stored_illumination_when_omitted(client, headers, calls
     inp = job_dir(data_dir, job_id) / "input"
     assert (inp / "illumination14.tiff").read_bytes() == b"stored-illum"
     assert (inp / "tAlgae49.txt").read_bytes() == b"traj-bytes"
+
+
+def test_create_job_with_only_exp_id_resolves_trajectories_and_illumination(
+    client, headers, calls, tmp_path, monkeypatch
+):
+    traj_dir = tmp_path / "lab_traj"
+    illum_dir = tmp_path / "lab_illum"
+    traj_dir.mkdir()
+    illum_dir.mkdir()
+    shutil.copy(EXP49_FIXTURES / "tAlgae49.txt", traj_dir / "tPhot50.txt")
+    (illum_dir / "illumination14.tif").write_bytes(b"lab-illum")
+
+    monkeypatch.setenv("APP_TRAJECTORIES_DIR", str(traj_dir))
+    monkeypatch.setenv("APP_ILLUMINATION_DIR", str(illum_dir))
+    get_settings.cache_clear()
+
+    data_dir = get_settings().data_dir
+    save_experiment(
+        data_dir,
+        ExperimentSettings(exps=50, exp_type=1, ill=14, intensity=180, pix_arr=1.041667),
+    )
+
+    response = client.post("/api/jobs", data={"exp_id": "50"}, headers=headers)
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    inp = job_dir(data_dir, job_id) / "input"
+    assert (inp / "tAlgae50.txt").read_bytes() == (EXP49_FIXTURES / "tAlgae49.txt").read_bytes()
+    assert (inp / "illumination14.tiff").read_bytes() == b"lab-illum"
+    cfg = load_config(data_dir, job_id)
+    assert cfg["inputs"] == {
+        "trajectories": "tPhot50.txt",
+        "illumination": "illumination14.tif",
+    }
+    assert calls == [(data_dir, job_id)]
+
+
+def test_create_job_with_resolved_video_does_not_copy_video(
+    client, headers, calls, tmp_path, monkeypatch
+):
+    video_dir = tmp_path / "lab_videos"
+    traj_dir = tmp_path / "lab_traj"
+    illum_dir = tmp_path / "lab_illum"
+    video_dir.mkdir()
+    traj_dir.mkdir()
+    illum_dir.mkdir()
+    video_file = video_dir / "tAlgae49.avi"
+    video_file.write_bytes(b"large-video")
+    (traj_dir / "tAlgae49.txt").write_bytes(b"traj")
+    (illum_dir / "illumination14.tiff").write_bytes(b"lab-illum")
+
+    monkeypatch.setenv("APP_VIDEO_DIR", str(video_dir))
+    monkeypatch.setenv("APP_TRAJECTORIES_DIR", str(traj_dir))
+    monkeypatch.setenv("APP_ILLUMINATION_DIR", str(illum_dir))
+    get_settings.cache_clear()
+
+    response = client.post("/api/jobs", data={"exp_id": "49"}, headers=headers)
+    assert response.status_code == 202
+    data_dir = get_settings().data_dir
+    job_id = response.json()["job_id"]
+    inp = job_dir(data_dir, job_id) / "input"
+    assert not list(inp.glob("*.avi"))
+    assert not (inp / "tAlgae49.txt").exists()
+    cfg = load_config(data_dir, job_id)
+    assert cfg["inputs"] == {
+        "video": "tAlgae49.avi",
+        "video_path": str(video_file.resolve()),
+        "illumination": "illumination14.tiff",
+    }
+
+
+def test_create_job_with_only_exp_id_missing_files_returns_422(
+    client, headers, calls, tmp_path, monkeypatch
+):
+    video_dir = tmp_path / "lab_videos"
+    video_dir.mkdir()
+    monkeypatch.setenv("APP_VIDEO_DIR", str(video_dir))
+    get_settings.cache_clear()
+
+    missing_media = client.post("/api/jobs", data={"exp_id": "49"}, headers=headers)
+    assert missing_media.status_code == 422
+    assert "Missing video or trajectories for experiment 49" in missing_media.json()["detail"]
+
+    (video_dir / "tAlgae49.avi").write_bytes(b"video")
+    missing_illum = client.post("/api/jobs", data={"exp_id": "49"}, headers=headers)
+    assert missing_illum.status_code == 422
+    assert "illumination14.tiff" in missing_illum.json()["detail"]
+    assert calls == []
